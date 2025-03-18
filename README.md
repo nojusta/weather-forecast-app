@@ -53,11 +53,9 @@ npm install
 
 3. Create a `.env` file in the root directory with the following variables:
 ```
-VITE_API_URL=http://localhost:5000
-VITE_METEO_API_BASE_URL=https://api.meteo.lt/v1
-PORT=5000
+VITE_API_URL=http://localhost:50001
+PORT=50001
 NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/weather-app
 ```
 
 4. Start the development servers
@@ -76,18 +74,26 @@ npm run dev
 
 ```
 weather-forecast-app/
-├── client/                 # Frontend React app
-│   ├── public/
+├── client/                      # Frontend React app
+│   ├── public/                  # Static assets
 │   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── context/        # React Context for state management
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API service calls
-│   │   ├── styles/         # SCSS styles
-│   │   └── App.jsx         # Main App component
-├── server/                 # Backend Node.js app
-│   ├── controllers/        # Route controllers
-│   ├── routes/             # Express routes
-│   └── index.js            # Entry point for the server
-└── .env                    # Environment variables
+│   │   ├── components/          # React components
+│   │   │   ├── ApiDebug.jsx     # API testing component (for debugging)
+│   │   │   ├── CitySearch.jsx   # City search dropdown
+│   │   │   ├── CurrentWeather.jsx # Current weather display
+│   │   │   ├── ForecastDisplay.jsx # 5-day forecast 
+│   │   │   └── Layout.jsx       # Page layout component
+│   │   ├── services/            # API service calls
+│   │   │   ├── weatherService.js # Weather API calls
+│   │   │   └── logService.js    # Logging service
+│   │   ├── App.jsx              # Main App component
+│   │   ├── main.jsx             # Entry point
+│   │   └── index.css            # Global styles with Tailwind
+│   ├── tailwind.config.js       # Tailwind configuration
+│   ├── postcss.config.js        # PostCSS configuration
+│   └── vite.config.js           # Vite configuration
+├── server/                      # Backend Node.js app
+│   ├── index.js                 # Server entry point & API routes
+│   └── package.json             # Backend dependencies
+└── README.md                    # Project documentation
 ```
