@@ -10,18 +10,17 @@ A responsive web application for displaying weather forecasts with user action l
 - Display of current weather conditions and 5-day forecasts
 - Backend logging of user actions
 
-## Technology Stack
+## Tech Stack
 
-### Frontend
-- React (Vite)
-- Tailwind CSS with PostCSS
+#### Frontend
+- React 18 with Vite
+- Tailwind CSS for styling
 - Axios for API requests
-- React Context API for state management
 
 ### Backend
 - Node.js with Express
-- Winston for logging
-- MongoDB (optional for storing user actions)
+- CORS handling and API proxy
+- Server-side logging of user interactions
 
 ### APIs
 - api.meteo.lt for weather data
@@ -29,7 +28,7 @@ A responsive web application for displaying weather forecasts with user action l
 ## Setup Instructions
 
 ### Prerequisites
-- Node.js (v14+)
+- Node.js (v16+)
 - npm or yarn
 
 ### Installation
@@ -96,4 +95,39 @@ weather-forecast-app/
 │   ├── index.js                 # Server entry point & API routes
 │   └── package.json             # Backend dependencies
 └── README.md                    # Project documentation
+```
+
+## Testing 
+
+### Testing Stack
+- **Vitest**: Fast test runner compatible with Vite
+- **React Testing Library**: User-focused component testing
+- **Jest DOM**: Extended DOM matchers for improved assertions
+
+### Test Coverage
+
+#### **Layout Component**
+- Renders header, footer, and content correctly
+- Ensures proper semantic HTML structure
+
+#### **City Search Component**
+- Handles user input and filtering
+- Displays loading state
+- Manages city selection
+- Shows most viewed cities
+
+#### **Current Weather Component**
+- Displays location information
+- Renders temperature and conditions
+- Handles missing data gracefully
+
+#### **Forecast Display Component**
+- Renders 5-day forecast
+- Displays daily temperatures and weather conditions
+- Groups data correctly
+
+### Running Tests
+Run tests with:
+```sh
+npm test
 ```

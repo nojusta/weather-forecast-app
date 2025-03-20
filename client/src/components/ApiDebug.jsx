@@ -1,3 +1,4 @@
+// Unused component for testing the API
 import { useState } from 'react';
 import { getPlaces } from '../services/weatherService';
 

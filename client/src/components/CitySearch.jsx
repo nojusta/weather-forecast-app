@@ -36,7 +36,11 @@ const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
           />
           {loading && (
             <div className="absolute right-3 top-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              <div 
+                role="status"
+                className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"
+                aria-label="Loading"
+              ></div>
             </div>
           )}
         </div>
