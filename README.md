@@ -2,20 +2,29 @@
 
 A responsive web application for displaying weather forecasts with user action logging.
 
+![Weather Forecast App](client/src/assets/FrontPage.png)
+
 ## Features
 
 - Responsive layout for all device sizes
 - Searchable dropdown to select cities for weather forecasts
 - Browser storage of 3 most viewed cities
-- Display of current weather conditions and 5-day forecasts
 - Backend logging of user actions
+- Display of current weather conditions and 5-day forecasts (implementation shown below)
+
+![5-day forecast](client/src/assets/5DayForecast.png)
+*5-day forecast*
 
 ## Tech Stack
 
-#### Frontend
+### Frontend
 - React 18 with Vite
-- Tailwind CSS for styling
 - Axios for API requests
+
+#### Frontend Styling
+- PostCSS for CSS processing
+- Tailwind CSS (as a PostCSS plugin) for utility-based styling
+- Responsive design implementation using Tailwind's responsive classes
 
 ### Backend
 - Node.js with Express
@@ -33,101 +42,153 @@ A responsive web application for displaying weather forecasts with user action l
 
 ### Installation
 
-1. Clone the repository
+1. Clone the repository  
 ```bash
 git clone https://github.com/nojusta/weather-forecast-app
 cd weather-forecast-app
 ```
 
-2. Install dependencies
+2. Install dependencies for both frontend and backend  
 ```bash
-# Install frontend dependencies
+# Frontend
 cd client
 npm install
 
-# Install backend dependencies
+# Backend
 cd ../server
 npm install
 ```
 
-3. Create a `.env` file in the root directory with the following variables:
-```
-VITE_API_URL=http://localhost:50001
-PORT=50001
-NODE_ENV=development
-```
+3. Create `.env` files for both frontend and backend:  
 
-4. Start the development servers
+- **Root directory (`.env`)** – for server configuration:  
+  ```ini
+  PORT=50001
+  NODE_ENV=development
+  ```
+
+- **Client directory (`client/.env`)** – for frontend configuration:  
+  ```ini
+  VITE_API_URL=http://localhost:50001
+  ```
+
+⚠️ **These `.env` files are not included in the repository for security practices** but are required for the application to function properly. Make sure to create both files before starting the development servers.
+
+4. Start the development servers  
 ```bash
-# Start backend server
+# Backend
 cd server
 npm run dev
 
-# In a new terminal, start frontend server
+# Frontend (in a new terminal)
 cd client
 npm run dev
 ```
 
-5. Open your browser and navigate to `http://localhost:5173` (the port may vary)
+5. Open `http://localhost:5173` in your browser. (Port may vary depending on your system).  
+
+💡 *To create a production build, use `npm run build`, and preview it with `npm run preview`.*
+
 ## Project Structure
 
 ```
 weather-forecast-app/
-├── client/                      # Frontend React app
+├── client/                      # Frontend
 │   ├── public/                  # Static assets
 │   ├── src/
 │   │   ├── components/          # React components
-│   │   │   ├── ApiDebug.jsx     # API testing component (for debugging)
-│   │   │   ├── CitySearch.jsx   # City search dropdown
-│   │   │   ├── CurrentWeather.jsx # Current weather display
-│   │   │   ├── ForecastDisplay.jsx # 5-day forecast 
-│   │   │   └── Layout.jsx       # Page layout component
-│   │   ├── services/            # API service calls
-│   │   │   ├── weatherService.js # Weather API calls
-│   │   │   └── logService.js    # Logging service
+│   │   ├── services/            # API calls and logging
+│   │   ├── test/                # Test configurations
 │   │   ├── App.jsx              # Main App component
 │   │   ├── main.jsx             # Entry point
-│   │   └── index.css            # Global styles with Tailwind
-│   ├── tailwind.config.js       # Tailwind configuration
-│   ├── postcss.config.js        # PostCSS configuration
-│   └── vite.config.js           # Vite configuration
-├── server/                      # Backend Node.js app
-│   ├── index.js                 # Server entry point & API routes
-│   └── package.json             # Backend dependencies
-└── README.md                    # Project documentation
+│   │   ├── index.css            # Global styles
+│   ├── tailwind.config.js       # Tailwind config
+│   ├── vite.config.js           # Vite config
+├── server/                      # Backend
+│   ├── routes/                  # API endpoints
+│   ├── index.js                 # Server entry point
+│   └── package.json             # Dependencies
+└── README.md                    # Documentation
 ```
 
-## Testing 
+## Testing and Quality Assurance
 
 ### Testing Stack
-- **Vitest**: Fast test runner compatible with Vite
-- **React Testing Library**: User-focused component testing
-- **Jest DOM**: Extended DOM matchers for improved assertions
+- **Vitest** (test runner)
+- **React Testing Library** (component testing)
+- **Jest DOM** (DOM matchers)
+- **Axios & LocalStorage mocking** for isolated tests
 
-### Test Coverage
+### Component Tests
+Tests that verify UI components render and behave correctly:
 
-#### **Layout Component**
-- Renders header, footer, and content correctly
-- Ensures proper semantic HTML structure
+- **Layout Component** 
+  - Renders header with application title
+  - Includes navigation structure
+  - Correctly renders child components
 
-#### **City Search Component**
-- Handles user input and filtering
-- Displays loading state
-- Manages city selection
-- Shows most viewed cities
+- **CitySearch Component** 
+  - Filters cities based on user input
+  - Displays loading state appropriately
+  - Shows most viewed cities section
+  - Handles empty search and selection events
 
-#### **Current Weather Component**
-- Displays location information
-- Renders temperature and conditions
-- Handles missing data gracefully
+- **CurrentWeather Component** 
+  - Displays location name and region
+  - Shows temperature and "feels like" values
+  - Renders weather conditions and metadata
+  - Gracefully handles missing data
 
-#### **Forecast Display Component**
-- Renders 5-day forecast
-- Displays daily temperatures and weather conditions
-- Groups data correctly
+- **ForecastDisplay Component** 
+  - Renders exactly 5 days of forecast data
+  - Groups forecasts correctly by day
+  - Shows temperature and conditions for each day
+  - Returns null when data is missing
+
+### Service Tests
+Tests that verify API communication and data handling:
+
+- **Weather Service** 
+  - Handles API errors with proper error propagation
+  - Manages empty or malformed API responses
+
+- **Log Service** 
+  - Successfully logs city view events
+  - Handles network failures without crashing
+
+### Integration Tests
+
+- **App Component** 
+  - Loads and stores most viewed cities in localStorage
+  - Updates localStorage when a city is selected
+  - Maintains a maximum of 3 most viewed cities
 
 ### Running Tests
-Run tests with:
-```sh
+```bash
+# Run all tests
 npm test
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Watch mode
+npm run test:watch
 ```
+
+## Performance Optimization
+
+A Lighthouse audit of the deployed application shows excellent performance metrics.
+
+![Lighthouse Results](client/src/assets/LightHouseResults.png)
+*Lighthouse audit results*
+
+### Performance Metrics
+
+| Metric | Score | Description |
+|--------|-------|-------------|
+| Performance | 100/100 | Optimized performance |
+| First Contentful Paint | 0.4s | Initial content load |
+| Largest Contentful Paint | 0.4s | Main content load |
+| Total Blocking Time | 0ms | Minimal thread blocking |
+| Cumulative Layout Shift | 0 | Stable layout |
+| Speed Index | 0.4s | Fast content display |

@@ -3,9 +3,8 @@ import Layout from './components/Layout';
 import CitySearch from './components/CitySearch';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastDisplay from './components/ForecastDisplay';
-import { getPlaces, getCurrentWeather, getForecast } from './services/weatherService';
+import { getPlaces, getForecast, getCurrentWeather } from './services/weatherService';
 import { logCityView } from './services/logService';
-import ApiDebug from './components/ApiDebug';
 
 function App() {
   const [cities, setCities] = useState([]);
@@ -44,7 +43,6 @@ function App() {
   const handleCitySelect = async (city) => {
     setSelectedCity(city);
     
-    // Log city selection
     logCityView(city.name);
     
     // Update most viewed cities
@@ -78,8 +76,6 @@ function App() {
 
   return (
     <Layout>
-      {//<ApiDebug />
-      }
       <CitySearch 
         cities={cities} 
         loading={loading}

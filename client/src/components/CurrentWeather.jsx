@@ -21,17 +21,17 @@ const CurrentWeather = ({ data }) => {
   return (
     <div className="max-w-md mx-auto mb-8">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-4">
+        <div className="bg-gradient-to-r from-blue-500 to-sky-500 text-white px-6 py-5">
           <h2 className="font-bold text-2xl">{place.name}</h2>
-          <p className="text-blue-100">{place.administrativeDivision}</p>
-          <p className="text-sm mt-1 text-blue-100">{formattedDate} • {formattedTime}</p>
+          <p className="text-white opacity-90">{place.administrativeDivision}</p>
+          <p className="text-sm mt-1 text-white opacity-85">{formattedDate} • {formattedTime}</p>
         </div>
         
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="text-5xl font-bold">{Math.round(currentWeather.airTemperature)}°C</div>
-              <div className="text-gray-500 mt-1">Feels like {Math.round(currentWeather.feelsLikeTemperature)}°C</div>
+              <div className="text-gray-600 mt-1">Feels like {Math.round(currentWeather.feelsLikeTemperature)}°C</div>
             </div>
             <div className="text-right">
               <div className="text-xl font-medium mb-1">{getConditionName(currentWeather.conditionCode)}</div>
@@ -39,22 +39,22 @@ const CurrentWeather = ({ data }) => {
           </div>
           
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-gray-500 text-sm mb-1">Wind</p>
-              <p className="font-medium">{currentWeather.windSpeed} m/s</p>
-              <p className="text-sm text-gray-500">Direction: {getWindDirection(currentWeather.windDirection)}</p>
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <p className="text-gray-600 text-sm mb-1">Wind</p>
+              <p className="font-medium text-gray-900">{currentWeather.windSpeed} m/s</p>
+              <p className="text-sm text-gray-600">Direction: {getWindDirection(currentWeather.windDirection)}</p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-gray-500 text-sm mb-1">Humidity</p>
-              <p className="font-medium">{currentWeather.relativeHumidity}%</p>
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <p className="text-gray-600 text-sm mb-1">Humidity</p>
+              <p className="font-medium text-gray-900">{currentWeather.relativeHumidity}%</p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-gray-500 text-sm mb-1">Pressure</p>
-              <p className="font-medium">{currentWeather.seaLevelPressure} hPa</p>
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <p className="text-gray-600 text-sm mb-1">Pressure</p>
+              <p className="font-medium text-gray-900">{currentWeather.seaLevelPressure} hPa</p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-gray-500 text-sm mb-1">Cloud Cover</p>
-              <p className="font-medium">{currentWeather.cloudCover}%</p>
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <p className="text-gray-600 text-sm mb-1">Cloud Cover</p>
+              <p className="font-medium text-gray-900">{currentWeather.cloudCover}%</p>
             </div>
           </div>
         </div>
@@ -62,6 +62,7 @@ const CurrentWeather = ({ data }) => {
     </div>
   );
 };
+
 
 // Helper function to get wind direction
 const getWindDirection = (degrees) => {

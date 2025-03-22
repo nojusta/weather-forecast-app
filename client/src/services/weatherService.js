@@ -1,15 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.meteo.lt/v1';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:50001';
-
 
 // Get all available places/cities
 export const getPlaces = async () => {
   try {
-    console.log('Fetching places from API...');
     const response = await axios.get(`${API_URL}/api/weather/places`);
-    console.log('API response status:', response.status);
     return response.data;
   } catch (error) {
     console.error('Error details:', error.response || error.message);
@@ -31,7 +27,7 @@ export const getForecast = async (placeCode) => {
 // Get current weather conditions (latest timestamp from forecast data)
 export const getCurrentWeather = async (placeCode) => {
   try {
-      const forecast = await getForecast(placeCode);
+    const forecast = await getForecast(placeCode);
     // Get current/nearest timestamp data
     const currentTime = new Date().toISOString();
     const forecastTimestamps = forecast.forecastTimestamps;

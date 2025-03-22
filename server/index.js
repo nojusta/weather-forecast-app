@@ -3,51 +3,40 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const axios = require('axios');
+const compression = require('compression');
+const apiRoutes = require('./routes/apiRoutes');
 
 const app = express();
-// Try different ports if the default is in use
 const PORT = process.env.PORT || 50001;
-const METEO_API_BASE_URL = 'https://api.meteo.lt/v1';
 
-// Middleware
-app.use(cors());
+// Middleware setup
+app.use(compression());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.PRODUCTION_URL 
+    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173'], 
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Proxy routes for weather API
-app.get('/api/weather/places', async (req, res) => {
-  try {
-    const response = await axios.get(`${METEO_API_BASE_URL}/places`);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error fetching places:', error);
-    res.status(500).json({ error: 'Failed to fetch places' });
-  }
-});
-
-app.get('/api/weather/places/:placeCode/forecasts/long-term', async (req, res) => {
-  try {
-    const { placeCode } = req.params;
-    const response = await axios.get(`${METEO_API_BASE_URL}/places/${placeCode}/forecasts/long-term`);
-    res.json(response.data);
-  } catch (error) {
-    console.error(`Error fetching forecast for ${req.params.placeCode}:`, error);
-    res.status(500).json({ error: 'Failed to fetch forecast' });
-  }
-});
-
-// Log user actions
-app.post('/api/log', (req, res) => {
-  const { city, timestamp } = req.body;
-  console.log(`[${new Date(timestamp).toLocaleString()}] User viewed weather for: ${city}`);
-  res.json({ success: true });
-});
+// Mount API routes
+app.use('/api', apiRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+  const statusCode = err.statusCode || 500;
+  const errorMessage = process.env.NODE_ENV === 'production' 
+    ? 'Server error' 
+    : err.message;
+  
+  console.error(`[${new Date().toISOString()}] ${err.stack}`);
+  res.status(statusCode).json({ 
+    error: errorMessage,
+    status: statusCode 
+  });
 });
 
 // Find an available port
