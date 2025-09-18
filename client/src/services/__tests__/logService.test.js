@@ -1,47 +1,41 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { logCityView } from '../logService';
-import axios from 'axios';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { logCityView } from "../logService";
+import axios from "axios";
 
-// Mock axios
-vi.mock('axios');
+vi.mock("axios");
 
-describe('Log Service', () => {
+describe("Log Service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    // Mock console.error to prevent test output clutter
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
-  describe('logCityView', () => {
-    it('should log city view successfully', async () => {
-      // Mock successful response
+  describe("logCityView", () => {
+    it("should log city view successfully", async () => {
       axios.post.mockResolvedValueOnce({ data: { success: true } });
-      
-      await logCityView('Vilnius');
-      
-      // Verify axios was called with correct arguments
+
+      await logCityView("Vilnius");
+
       expect(axios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/log'),
+        expect.stringContaining("/api/log"),
         expect.objectContaining({
-          city: 'Vilnius',
-          timestamp: expect.any(String)
+          city: "Vilnius",
+          timestamp: expect.any(String),
         })
       );
     });
 
-    it('should handle errors gracefully', async () => {
-      // Mock network error
-      axios.post.mockRejectedValueOnce(new Error('Network Error'));
-      
-      // Function should not throw but handle error internally
-      await expect(logCityView('Vilnius')).resolves.not.toThrow();
-      
-      // Verify error was logged
+    it("should handle errors gracefully", async () => {
+      axios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+      await expect(logCityView("Vilnius")).resolves.not.toThrow();
+
       expect(console.error).toHaveBeenCalled();
     });
   });
-  
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
