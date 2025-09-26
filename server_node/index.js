@@ -7,7 +7,7 @@ const compression = require("compression");
 const apiRoutes = require("./routes/apiRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 50001;
+const PORT = process.env.PORT || 5053;
 
 // Middleware setup
 app.use(compression());
