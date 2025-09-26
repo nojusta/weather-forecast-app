@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:50001";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5053";
 
 export const getPlaces = async () => {
   try {
