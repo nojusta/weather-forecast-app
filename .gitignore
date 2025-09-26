@@ -36,3 +36,17 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+
+# C#/.NET-specific ignores
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+*.ncrunch*
+*.coverage
+*.coveragexml
+*.testsettings
+*.vs/
+.vscode/launch.json
+.vscode/tasks.json

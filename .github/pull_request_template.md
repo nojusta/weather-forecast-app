@@ -2,4 +2,4 @@
 
 ## Description
 
-[Describe what this lab work implements or achieves]
+[Describe what this PR implements or achieves]
