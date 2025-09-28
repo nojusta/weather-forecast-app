@@ -24,6 +24,7 @@ export const getForecast = async (placeCode) => {
   }
 };
 
+// move-BE
 export const getCurrentWeather = async (placeCode) => {
   try {
     const forecast = await getForecast(placeCode);

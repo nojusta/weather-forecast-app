@@ -1,24 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
+import useFilteredCities from "../hooks/useFilteredCities";
 
 const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCities, setFilteredCities] = useState([]);
-
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredCities([]);
-      return;
-    }
-
-    const filtered = cities
-      .filter((city) =>
-        city.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .slice(0, 10);
-
-    setFilteredCities(filtered);
-  }, [searchTerm, cities]);
+  const filteredCities = useFilteredCities(cities, searchTerm);
 
   return (
     <div className="max-w-md mx-auto mb-8">
@@ -50,7 +36,6 @@ const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
           )}
         </div>
 
-        {/* Search results dropdown */}
         {filteredCities.length > 0 && (
           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
             {filteredCities.map((city) => (
@@ -60,7 +45,6 @@ const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
                 onClick={() => {
                   onSelectCity(city);
                   setSearchTerm("");
-                  setFilteredCities([]);
                 }}
               >
                 <span className="font-medium">{city.name}</span>
@@ -73,7 +57,6 @@ const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
         )}
       </div>
 
-      {/* Most viewed cities */}
       {mostViewedCities.length > 0 && (
         <div className="mt-6">
           <h3 className="text-sm font-medium text-gray-700 mb-2">

@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import CitySearch from "../CitySearch";
 
 describe("CitySearch Component", () => {
@@ -75,7 +81,7 @@ describe("CitySearch Component", () => {
     expect(loadingIndicator).toBeInTheDocument();
   });
 
-  it("displays filtered cities when typing", () => {
+  it("displays filtered cities when typing", async () => {
     render(
       <CitySearch
         cities={mockCities}
@@ -88,12 +94,14 @@ describe("CitySearch Component", () => {
     const input = screen.getByPlaceholderText(/Type to search/i);
     fireEvent.change(input, { target: { value: "k" } });
 
-    expect(screen.getByText("Kaunas")).toBeInTheDocument();
-    expect(screen.getByText("Klaipėda")).toBeInTheDocument();
-    expect(screen.queryByText("Vilnius")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Kaunas")).toBeInTheDocument();
+      expect(screen.getByText("Klaipėda")).toBeInTheDocument();
+      expect(screen.queryByText("Vilnius")).not.toBeInTheDocument();
+    });
   });
 
-  it("limits the number of displayed cities", () => {
+  it("limits the number of displayed cities", async () => {
     const manyCities = Array.from({ length: 20 }, (_, i) => ({
       code: `city-${i}`,
       name: `City ${i}`,
@@ -112,11 +120,13 @@ describe("CitySearch Component", () => {
     const input = screen.getByPlaceholderText(/Type to search/i);
     fireEvent.change(input, { target: { value: "city" } });
 
-    const cityButtons = screen.getAllByRole("button", { name: /City \d/ });
-    expect(cityButtons.length).toBeLessThanOrEqual(10);
+    await waitFor(() => {
+      const cityButtons = screen.getAllByRole("button", { name: /City \d/ });
+      expect(cityButtons.length).toBeLessThanOrEqual(10);
+    });
   });
 
-  it("calls onSelectCity with correct city when a city is clicked", () => {
+  it("calls onSelectCity with correct city when a city is clicked", async () => {
     render(
       <CitySearch
         cities={mockCities}
@@ -129,14 +139,16 @@ describe("CitySearch Component", () => {
     const input = screen.getByPlaceholderText(/Type to search/i);
     fireEvent.change(input, { target: { value: "kau" } });
 
-    const cityItem = screen.getByText("Kaunas");
-    fireEvent.click(cityItem);
+    await waitFor(() => {
+      const cityItem = screen.getByText("Kaunas");
+      fireEvent.click(cityItem);
 
-    expect(mockOnSelectCity).toHaveBeenCalledWith(mockCities[1]);
-    expect(mockOnSelectCity).toHaveBeenCalledTimes(1);
+      expect(mockOnSelectCity).toHaveBeenCalledWith(mockCities[1]);
+      expect(mockOnSelectCity).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it("clears search input and results after city selection", () => {
+  it("clears search input and results after city selection", async () => {
     render(
       <CitySearch
         cities={mockCities}
@@ -149,13 +161,17 @@ describe("CitySearch Component", () => {
     const input = screen.getByPlaceholderText(/Type to search/i);
     fireEvent.change(input, { target: { value: "kau" } });
 
-    expect(screen.getByText("Kaunas")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Kaunas")).toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByText("Kaunas"));
 
     expect(input.value).toBe("");
 
-    expect(screen.queryByText("Kaunas")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("Kaunas")).not.toBeInTheDocument();
+    });
   });
 
   it("displays most viewed cities when provided", () => {

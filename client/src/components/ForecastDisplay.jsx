@@ -70,6 +70,7 @@ const formatDate = (dateString) => {
   });
 };
 
+// move-BE
 const groupForecastsByDay = (forecasts) => {
   const days = {};
 
@@ -86,6 +87,7 @@ const groupForecastsByDay = (forecasts) => {
   return days;
 };
 
+// move-BE
 const getConditionName = (code) => {
   const conditions = {
     clear: "Clear",
