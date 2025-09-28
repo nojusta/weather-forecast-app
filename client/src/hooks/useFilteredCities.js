@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import useDebounce from "./useDebounce";
 
-interface City {
-  name: string;
-  code: string;
-}
 
-const useFilteredCities = (cities: City[], searchTerm: string): City[] => {
-  const [filteredCities, setFilteredCities] = useState<City[]>([]);
+const useFilteredCities = (cities, searchTerm) => {
+  const [filteredCities, setFilteredCities] = useState([]);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   useEffect(() => {
