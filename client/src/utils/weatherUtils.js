@@ -1,3 +1,5 @@
+// move-BE (whole file logic)
+
 export const getWindDirection = (degrees) => {
   const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   const index = Math.round(degrees / 45) % 8;
