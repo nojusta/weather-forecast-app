@@ -1,59 +1,22 @@
-import { useState } from "react";
 import PropTypes from "prop-types";
+import useAuth from "../hooks/useAuth";
 
 const LoginRegister = ({ onLoginSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    const endpoint = isLogin
-      ? "http://localhost:5053/api/auth/login"
-      : "http://localhost:5053/api/auth/register";
-
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Something went wrong");
-        return;
-      }
-
-      if (isLogin) {
-        onLoginSuccess(data.token, data.username, data.email);
-      } else {
-        alert("Registration successful! Please log in.");
-        setIsLogin(true);
-      }
-    } catch {
-      setError("Failed to connect to the server.");
-    }
-  };
+  const {
+    isLogin,
+    setIsLogin,
+    formData,
+    error,
+    handleInputChange,
+    handleSubmit,
+  } = useAuth(onLoginSuccess);
 
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-sky-500 text-white px-8 py-8">
           <h2 className="font-bold text-3xl text-center mb-2">
-            {isLogin ? "Welcome Back" : "Create Account"}
+            {isLogin ? "Welcome back!" : "Create Account"}
           </h2>
           <p className="text-white opacity-90 text-center">
             {isLogin
