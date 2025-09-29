@@ -8,7 +8,7 @@ import useWeather from "./hooks/useWeather";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null); // Store user info (e.g., username, email)
+  const [user, setUser] = useState(null);
   const {
     cities,
     loading,
@@ -22,7 +22,7 @@ function App() {
   const handleLoginSuccess = (token, username, email) => {
     setIsAuthenticated(true);
     setUser({ username, email });
-    localStorage.setItem("authToken", token); // Store the token for future requests
+    localStorage.setItem("authToken", token);
   };
 
   const handleLogout = () => {
