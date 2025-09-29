@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using server.Models;
 
 [ApiController]
 [Route("api/log")]
@@ -15,10 +16,4 @@ public class LogController : ControllerBase
         Console.WriteLine($"[{logRequest.Timestamp}] User viewed weather for: {logRequest.City}");
         return Ok(new { success = true });
     }
-}
-
-public class LogRequest
-{
-    public string? City { get; set; }
-    public string? Timestamp { get; set; }
 }
