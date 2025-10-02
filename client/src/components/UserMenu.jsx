@@ -1,6 +1,6 @@
 import { Menu, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import { FaUserCircle } from "react-icons/fa"; // User icon from react-icons
+import { FaUserCircle } from "react-icons/fa";
 import PropTypes from "prop-types";
 
 const UserMenu = ({ onLogout }) => {
@@ -22,9 +22,6 @@ const UserMenu = ({ onLogout }) => {
         leaveTo="transform opacity-0 scale-95"
       >
         <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right bg-white divide-y divide-gray-200 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <div className="px-4 py-3">
-            <p className="text-sm text-gray-500">User Options</p>
-          </div>
           <div className="py-1">
             <Menu.Item>
               {({ active }) => (
