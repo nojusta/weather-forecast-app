@@ -50,3 +50,8 @@ obj/
 *.vs/
 .vscode/launch.json
 .vscode/tasks.json
+
+# SQLite database files
+weather-app.db
+weather-app.db-shm
+weather-app.db-wal
