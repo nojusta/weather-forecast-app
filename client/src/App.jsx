@@ -1,14 +1,23 @@
-import { useState } from "react";
 import Layout from "./components/Layout";
 import CitySearch from "./components/CitySearch";
 import CurrentWeather from "./components/CurrentWeather";
 import ForecastDisplay from "./components/ForecastDisplay";
 import LoginRegister from "./components/LoginRegister";
+import UserMenu from "./components/UserMenu";
 import useWeather from "./hooks/useWeather";
+import useAuthState from "./hooks/useAuthState";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const {
+    isAuthenticated,
+    isGuest,
+    showLoginRegister,
+    handleLoginSuccess,
+    handleGuestAccess,
+    handleLogout,
+    toggleLoginRegister,
+  } = useAuthState();
+
   const {
     cities,
     loading,
@@ -19,33 +28,37 @@ function App() {
     handleCitySelect,
   } = useWeather();
 
-  const handleLoginSuccess = (token, username, email) => {
-    setIsAuthenticated(true);
-    setUser({ username, email });
-    localStorage.setItem("authToken", token);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem("authToken");
-  };
-
   return (
     <Layout>
-      {!isAuthenticated ? (
-        <LoginRegister onLoginSuccess={handleLoginSuccess} />
+      {/* Conditionally render UserMenu only if LoginRegister is not visible */}
+      {!showLoginRegister && (
+        <div className="absolute top-4 right-4">
+          <UserMenu
+            isAuthenticated={isAuthenticated}
+            isGuest={isGuest}
+            onLogout={() => {
+              handleLogout();
+              toggleLoginRegister();
+            }}
+            onLogin={toggleLoginRegister}
+          />
+        </div>
+      )}
+
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-blue-800">Weather Forecast</h1>
+        <p className="text-gray-600 mt-2">
+          Check current conditions and forecasts
+        </p>
+      </div>
+
+      {showLoginRegister ? (
+        <LoginRegister
+          onLoginSuccess={handleLoginSuccess}
+          onGuestAccess={handleGuestAccess}
+        />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Welcome, {user?.username}!</h2>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Logout
-            </button>
-          </div>
           <CitySearch
             cities={cities}
             loading={loading}
@@ -56,6 +69,14 @@ function App() {
             <CurrentWeather data={currentWeather} />
           )}
           {selectedCity && forecast && <ForecastDisplay data={forecast} />}
+          {isGuest && (
+            <div className="mt-8 text-center text-gray-600">
+              <p>
+                You are using the app as a guest. Log in to save your favorite
+                cities and access more features.
+              </p>
+            </div>
+          )}
         </>
       )}
     </Layout>

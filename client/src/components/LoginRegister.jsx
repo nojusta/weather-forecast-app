@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import useAuth from "../hooks/useAuth";
 
-const LoginRegister = ({ onLoginSuccess }) => {
+const LoginRegister = ({ onLoginSuccess, onGuestAccess }) => {
   const {
     isLogin,
     setIsLogin,
@@ -16,12 +16,12 @@ const LoginRegister = ({ onLoginSuccess }) => {
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-sky-500 text-white px-8 py-8">
           <h2 className="font-bold text-3xl text-center mb-2">
-            {isLogin ? "Welcome back!" : "Create Account"}
+            {isLogin ? "Welcome Back!" : "Create Account"}
           </h2>
           <p className="text-white opacity-90 text-center">
             {isLogin
               ? "Sign in to access your weather dashboard"
-              : "Join to get personalized weather forecasts"}
+              : "Join us to get personalized weather forecasts"}
           </p>
         </div>
 
@@ -100,6 +100,15 @@ const LoginRegister = ({ onLoginSuccess }) => {
             </button>
           </div>
         </div>
+
+        <div className="bg-gray-100 px-8 py-6 text-center">
+          <button
+            onClick={onGuestAccess}
+            className=" bg-gradient-to-r from-blue-400 to-sky-500  text-white px-6 py-2 rounded-lg font-medium hover:from-blue-500 hover:to-sky-500 transition-colors"
+          >
+            Continue as Guest
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -107,6 +116,7 @@ const LoginRegister = ({ onLoginSuccess }) => {
 
 LoginRegister.propTypes = {
   onLoginSuccess: PropTypes.func.isRequired,
+  onGuestAccess: PropTypes.func.isRequired,
 };
 
 export default LoginRegister;
