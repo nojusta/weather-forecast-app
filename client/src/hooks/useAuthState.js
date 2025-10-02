@@ -4,6 +4,7 @@ const useAuthState = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [user, setUser] = useState(null);
+  const [showLoginRegister, setShowLoginRegister] = useState(false);
 
   useEffect(() => {
     const storedAuth = localStorage.getItem("isAuthenticated") === "true";
@@ -13,6 +14,10 @@ const useAuthState = () => {
     setIsAuthenticated(storedAuth);
     setIsGuest(storedGuest);
     setUser(storedUser);
+
+    if (!storedAuth && !storedGuest) {
+      setShowLoginRegister(true);
+    }
   }, []);
 
   const handleLoginSuccess = (token, username, email) => {
@@ -23,6 +28,7 @@ const useAuthState = () => {
     localStorage.setItem("isGuest", "false");
     localStorage.setItem("user", JSON.stringify({ username, email }));
     localStorage.setItem("authToken", token);
+    setShowLoginRegister(false);
   };
 
   const handleGuestAccess = () => {
@@ -32,6 +38,7 @@ const useAuthState = () => {
     localStorage.setItem("isAuthenticated", "false");
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
+    setShowLoginRegister(false);
   };
 
   const handleLogout = () => {
@@ -44,13 +51,19 @@ const useAuthState = () => {
     localStorage.removeItem("authToken");
   };
 
+  const toggleLoginRegister = () => {
+    setShowLoginRegister((prev) => !prev);
+  };
+
   return {
     isAuthenticated,
     isGuest,
     user,
+    showLoginRegister,
     handleLoginSuccess,
     handleGuestAccess,
     handleLogout,
+    toggleLoginRegister,
   };
 };
 

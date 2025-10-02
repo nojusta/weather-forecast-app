@@ -11,9 +11,11 @@ function App() {
   const {
     isAuthenticated,
     isGuest,
+    showLoginRegister,
     handleLoginSuccess,
     handleGuestAccess,
     handleLogout,
+    toggleLoginRegister,
   } = useAuthState();
 
   const {
@@ -28,9 +30,20 @@ function App() {
 
   return (
     <Layout>
-      <div className="absolute top-4 right-4">
-        <UserMenu onLogout={handleLogout} />
-      </div>
+      {/* Conditionally render UserMenu only if LoginRegister is not visible */}
+      {!showLoginRegister && (
+        <div className="absolute top-4 right-4">
+          <UserMenu
+            isAuthenticated={isAuthenticated}
+            isGuest={isGuest}
+            onLogout={() => {
+              handleLogout();
+              toggleLoginRegister();
+            }}
+            onLogin={toggleLoginRegister}
+          />
+        </div>
+      )}
 
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-blue-800">Weather Forecast</h1>
@@ -39,7 +52,7 @@ function App() {
         </p>
       </div>
 
-      {!isAuthenticated && !isGuest ? (
+      {showLoginRegister ? (
         <LoginRegister
           onLoginSuccess={handleLoginSuccess}
           onGuestAccess={handleGuestAccess}
