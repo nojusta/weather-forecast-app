@@ -78,7 +78,7 @@ const UserMenu = ({ isAuthenticated, isGuest, onLogout, onLogin }) => {
                         : "text-red-600"
                     } group flex items-center w-full px-4 py-2 text-sm`}
                   >
-                    {isGuest ? "Login" : "Logout"}
+                    {isGuest ? "Login to access more features" : "Logout"}
                   </button>
                 )}
               </Menu.Item>
