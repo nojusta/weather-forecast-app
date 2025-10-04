@@ -10,6 +10,7 @@ namespace server.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<CityLog> CityLogs { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +24,14 @@ namespace server.Data
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.PasswordHash).IsRequired();
                 entity.Property(e => e.CreatedAt).IsRequired();
+            });
+
+            modelBuilder.Entity<CityLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.City).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Timestamp).IsRequired();
             });
         }
     }

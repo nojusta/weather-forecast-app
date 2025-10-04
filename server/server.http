@@ -23,3 +23,17 @@ Content-Type: application/json
   "email": "test@example.com",
   "password": "password123"
 }
+
+### Log a city view
+POST {{server_HostAddress}}/api/log
+Content-Type: application/json
+Authorization: Bearer <JWT_TOKEN>
+
+{
+  "city": "Vilnius",
+  "timestamp": "2025-10-05T12:00:00Z"
+}
+
+### Get user history
+GET {{server_HostAddress}}/api/log/history
+Authorization: Bearer <JWT_TOKEN>
