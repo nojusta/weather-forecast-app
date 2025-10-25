@@ -12,3 +12,13 @@ export const logCityView = async (cityName) => {
     console.error("Failed to log city view:", error);
   }
 };
+
+export const getUserHistory = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/log/history`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user history:", error);
+    return [];
+  }
+};

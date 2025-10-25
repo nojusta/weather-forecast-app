@@ -60,7 +60,7 @@ const CitySearch = ({ cities, loading, onSelectCity, mostViewedCities }) => {
       {mostViewedCities.length > 0 && (
         <div className="mt-6">
           <h3 className="text-sm font-medium text-gray-700 mb-2">
-            Most viewed locations:
+            Your recently viewed locations:
           </h3>
           <div className="flex flex-wrap gap-2">
             {mostViewedCities.map((city) => (
