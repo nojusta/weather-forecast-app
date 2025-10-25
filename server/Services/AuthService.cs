@@ -83,8 +83,9 @@ namespace server.Services
 
         private string GenerateJwtToken(User user)
         {
-            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
-                            ?? throw new InvalidOperationException("JWT_SECRET_KEY is not set in the environment variables.");
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                            ?? _configuration["Jwt:SecretKey"]
+                            ?? throw new InvalidOperationException("JWT secret is not configured.");
         
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
