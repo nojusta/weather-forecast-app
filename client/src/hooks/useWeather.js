@@ -38,11 +38,24 @@ const useWeather = () => {
     loadMostViewedCities();
   }, []);
 
+  const toIsoTimestamp = (timestamp) => {
+    if (!timestamp) return undefined;
+
+    try {
+      const normalized = timestamp.includes("T")
+        ? timestamp
+        : timestamp.replace(" ", "T");
+      const date = new Date(
+        normalized.endsWith("Z") ? normalized : `${normalized}Z`
+      );
+      return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+    } catch {
+      return undefined;
+    }
+  };
+
   const handleCitySelect = async (city) => {
     setSelectedCity(city);
-
-    logCityView(city.name);
-
     updateMostViewedCities(city);
 
     try {
@@ -52,9 +65,19 @@ const useWeather = () => {
 
       const forecastData = await getForecast(city.code);
       setForecast(forecastData);
-      setLoading(false);
+
+      await logCityView({
+        city: city.name,
+        timestamp: toIsoTimestamp(
+          weatherData?.currentWeather?.forecastTimeUtc
+        ),
+        temperatureC: weatherData?.currentWeather?.airTemperature,
+        feelsLikeC: weatherData?.currentWeather?.feelsLikeTemperature,
+        conditions: weatherData?.currentWeather?.conditionCode,
+      });
     } catch (error) {
       console.error("Error fetching weather data:", error);
+    } finally {
       setLoading(false);
     }
   };

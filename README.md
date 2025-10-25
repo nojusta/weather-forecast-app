@@ -9,8 +9,10 @@ A responsive web application for displaying weather forecasts with user action l
 - Responsive layout for all device sizes
 - Searchable dropdown to select cities for weather forecasts
 - Browser storage of 3 most viewed cities
-- Backend logging of user actions
+- Backend logging of user actions, including per-user history
+- Analytics dashboard endpoints for hottest/coldest cities and viewing stats
 - Display of current weather conditions and 5-day forecasts (implementation shown below)
+- JWT-based authentication with optional guest mode for quick previews
 
 ![5-day forecast](client/src/assets/5DayForecast.png)
 _5-day forecast_
@@ -25,7 +27,9 @@ _5-day forecast_
 
 ### Backend
 
-- .NET
+- .NET 9 Web API
+- Entity Framework Core + SQLite for persistence
+- JWT authentication with DotNetEnv-driven configuration
 
 ### APIs
 
@@ -35,8 +39,9 @@ _5-day forecast_
 
 ### Prerequisites
 
-- Node.js (v16+)
+- Node.js (v16+) for the React client
 - npm or yarn
+- .NET SDK 9.x for the API
 
 ### Installation
 
@@ -47,40 +52,41 @@ git clone https://github.com/nojusta/weather-forecast-app
 cd weather-forecast-app
 ```
 
-2. Install dependencies for both frontend and backend
+2. Install dependencies
 
 ```bash
 # Frontend
 cd client
 npm install
 
-# Backend
+# Backend (restores NuGet packages)
 cd ../server
-npm install
+dotnet restore
 ```
 
-3. Create `.env` files for both frontend and backend:
+3. Create `.env` files:
 
-- **Root directory (`.env`)** – for server configuration:
+- **Server (`server/.env`)** – JWT + database configuration:
 
   ```ini
-  PORT=50001
-  NODE_ENV=development
+  JWT_SECRET_KEY=<Generate_jwt_token_and_add_here>
+  CONNECTION_STRING=Data Source=weather-app.db
   ```
 
-- **Client directory (`client/.env`)** – for frontend configuration:
+- **Client directory (`client/.env`)** – frontend API target:
   ```ini
-  VITE_API_URL=http://localhost:50001
+  VITE_API_URL=http://localhost:5053
   ```
 
 ⚠️ **These `.env` files are not included in the repository for security practices** but are required for the application to function properly. Make sure to create both files before starting the development servers.
 
-4. Start the development servers
+4. Apply migrations and start the development servers
 
 ```bash
 # Backend
 cd server
-npm run dev
+dotnet ef database update
+dotnet run
 
 # Frontend (in a new terminal)
 cd client
@@ -106,10 +112,17 @@ weather-forecast-app/
 │   │   ├── index.css            # Global styles
 │   ├── tailwind.config.js       # Tailwind config
 │   ├── vite.config.js           # Vite config
-├── server/                      # Backend
-│   ├── routes/                  # API endpoints
-│   ├── index.js                 # Server entry point
-│   └── package.json             # Dependencies
+├── server/                      # .NET 9 Web API backend
+│   ├── appsettings*.json        # Environment configs
+│   ├── Controllers/             # Auth, weather, logging endpoints
+│   ├── Data/                    # EF Core DbContext + factories
+│   ├── Migrations/              # Database schema history
+│   ├── Models/                  # Request/response + entity models
+│   ├── Services/                # Auth + CityLog services
+│   ├── Program.cs               # Entry point / middleware
+│   ├── server.csproj            # Project definition
+│   ├── bin/Debug/net9.0/        # Build output (trimmed)
+│   └── obj/                     # Build artifacts
 └── README.md                    # Documentation
 ```
 

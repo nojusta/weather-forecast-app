@@ -3,7 +3,14 @@ import { Fragment } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import PropTypes from "prop-types";
 
-const UserMenu = ({ isAuthenticated, isGuest, onLogout, onLogin }) => {
+const UserMenu = ({
+  isAuthenticated,
+  isGuest,
+  onLogout,
+  onLogin,
+  onOpenHistory,
+  onOpenStats,
+}) => {
   if (!isAuthenticated && !isGuest) {
     return null;
   }
@@ -33,6 +40,7 @@ const UserMenu = ({ isAuthenticated, isGuest, onLogout, onLogin }) => {
                   <Menu.Item>
                     {({ active }) => (
                       <button
+                        onClick={onOpenHistory}
                         className={`${
                           active ? "bg-blue-100 text-blue-600" : "text-gray-700"
                         } group flex items-center w-full px-4 py-2 text-sm`}
@@ -44,6 +52,7 @@ const UserMenu = ({ isAuthenticated, isGuest, onLogout, onLogin }) => {
                   <Menu.Item>
                     {({ active }) => (
                       <button
+                        onClick={onOpenStats}
                         className={`${
                           active ? "bg-blue-100 text-blue-600" : "text-gray-700"
                         } group flex items-center w-full px-4 py-2 text-sm`}
@@ -95,6 +104,8 @@ UserMenu.propTypes = {
   isGuest: PropTypes.bool.isRequired,
   onLogout: PropTypes.func.isRequired,
   onLogin: PropTypes.func.isRequired,
+  onOpenHistory: PropTypes.func.isRequired,
+  onOpenStats: PropTypes.func.isRequired,
 };
 
 export default UserMenu;

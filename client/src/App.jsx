@@ -4,8 +4,11 @@ import CurrentWeather from "./components/CurrentWeather";
 import ForecastDisplay from "./components/ForecastDisplay";
 import LoginRegister from "./components/LoginRegister";
 import UserMenu from "./components/UserMenu";
+import HistoryModal from "./components/HistoryModal";
+import StatsModal from "./components/StatsModal";
 import useWeather from "./hooks/useWeather";
 import useAuthState from "./hooks/useAuthState";
+import useUserInsights from "./hooks/useUserInsights";
 
 function App() {
   const {
@@ -27,10 +30,21 @@ function App() {
     mostViewedCities,
     handleCitySelect,
   } = useWeather();
+  const {
+    historyModalOpen,
+    statsModalOpen,
+    historyState,
+    statsState,
+    openHistory,
+    openStats,
+    closeHistory,
+    closeStats,
+    refreshHistory,
+    refreshStats,
+  } = useUserInsights(isAuthenticated);
 
   return (
     <Layout>
-      {/* Conditionally render UserMenu only if LoginRegister is not visible */}
       {!showLoginRegister && (
         <div className="absolute top-4 right-4">
           <UserMenu
@@ -41,6 +55,8 @@ function App() {
               toggleLoginRegister();
             }}
             onLogin={toggleLoginRegister}
+            onOpenHistory={openHistory}
+            onOpenStats={openStats}
           />
         </div>
       )}
@@ -79,6 +95,24 @@ function App() {
           )}
         </>
       )}
+
+      <HistoryModal
+        isOpen={historyModalOpen}
+        onClose={closeHistory}
+        entries={historyState.entries}
+        loading={historyState.loading}
+        error={historyState.error}
+        onRefresh={refreshHistory}
+      />
+      <StatsModal
+        isOpen={statsModalOpen}
+        onClose={closeStats}
+        topCities={statsState.topCities}
+        extremes={statsState.extremes}
+        loading={statsState.loading}
+        error={statsState.error}
+        onRefresh={refreshStats}
+      />
     </Layout>
   );
 }

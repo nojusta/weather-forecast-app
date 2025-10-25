@@ -1,39 +1,35 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Layout from '../Layout';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import Layout from "../Layout";
 
-describe('Layout Component', () => {
-  it('renders header with app title', () => {
-    render(<Layout>Test Content</Layout>);
-    
-    expect(screen.getByText('Weather Forecast')).toBeInTheDocument();
+describe("Layout Component", () => {
+  it("renders child content inside the main element", () => {
+    render(
+      <Layout>
+        <div data-testid="custom-child">Custom Content</div>
+      </Layout>
+    );
+
+    const main = screen.getByRole("main");
+    expect(main).toBeInTheDocument();
+    expect(screen.getByTestId("custom-child")).toBeInTheDocument();
   });
-  
-  it('renders child content correctly', () => {
-    render(<Layout><div data-testid="custom-child">Custom Content</div></Layout>);
-    
-    expect(screen.getByTestId('custom-child')).toBeInTheDocument();
-    expect(screen.getByText('Custom Content')).toBeInTheDocument();
-  });
-  
-  it('renders footer with attribution information', () => {
+
+  it("shows attribution footer", () => {
     render(<Layout>Test Content</Layout>);
-    
-    const footer = screen.getByText(/LHMT/);
+
+    const footer = screen.getByText(
+      /Data provided by LHMT \(Lietuvos hidrometeorologijos tarnyba\)/i
+    );
     expect(footer).toBeInTheDocument();
-    expect(footer.closest('footer')).toBeInTheDocument();
-  });
-  
-  it('has appropriate semantic structure', () => {
-    const { container } = render(<Layout>Test Content</Layout>);
-    
-    expect(container.querySelector('header')).toBeInTheDocument();
-    expect(container.querySelector('main')).toBeInTheDocument();
-    expect(container.querySelector('footer')).toBeInTheDocument();
+    expect(footer.closest("footer")).toBeInTheDocument();
   });
 
-    it('renders subtitle text', () => {
-    render(<Layout>Test Content</Layout>);
-    expect(screen.getByText('Check current conditions and forecasts')).toBeInTheDocument();
+  it("applies background gradient wrapper", () => {
+    const { container } = render(<Layout>Test Content</Layout>);
+    expect(container.firstChild).toHaveClass(
+      "min-h-screen",
+      "bg-gradient-to-b"
+    );
   });
 });

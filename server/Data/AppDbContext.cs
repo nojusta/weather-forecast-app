@@ -32,6 +32,11 @@ namespace server.Data
                 entity.Property(e => e.UserId).IsRequired();
                 entity.Property(e => e.City).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Timestamp).IsRequired();
+                entity.Property(e => e.TemperatureC);
+                entity.Property(e => e.FeelsLikeC);
+                entity.Property(e => e.Conditions).HasMaxLength(255);
+                entity.HasIndex(e => new { e.UserId, e.Timestamp });
+                entity.HasIndex(e => new { e.UserId, e.City });
             });
         }
     }

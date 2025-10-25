@@ -184,10 +184,12 @@ describe("CitySearch Component", () => {
       />
     );
 
-    expect(screen.getByText("Most viewed locations:")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your recently viewed locations:")
+    ).toBeInTheDocument();
 
     const mostViewedSection = screen.getByText(
-      "Most viewed locations:"
+      "Your recently viewed locations:"
     ).parentElement;
     expect(within(mostViewedSection).getByText("Vilnius")).toBeInTheDocument();
     expect(within(mostViewedSection).getByText("Palanga")).toBeInTheDocument();

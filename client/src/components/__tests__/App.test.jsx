@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import App from "../../App";
 import * as weatherService from "../../services/weatherService";
 import * as logService from "../../services/logService";
@@ -19,7 +19,12 @@ describe("App", () => {
 
   const mockWeather = {
     place: { code: "vilnius", name: "Vilnius" },
-    currentWeather: { airTemperature: 15, conditionCode: "clear" },
+    currentWeather: {
+      airTemperature: 15,
+      feelsLikeTemperature: 13,
+      conditionCode: "clear",
+      forecastTimeUtc: "2025-10-25T20:00:00Z",
+    },
   };
 
   const mockForecast = {
@@ -39,6 +44,9 @@ describe("App", () => {
   });
 
   it("loads most viewed cities from localStorage on mount", async () => {
+    localStorage.setItem("isGuest", "true");
+    localStorage.setItem("isAuthenticated", "false");
+
     const savedCities = [
       {
         code: "vilnius",
@@ -59,6 +67,9 @@ describe("App", () => {
   });
 
   it("updates localStorage when a city is selected", async () => {
+    localStorage.setItem("isGuest", "true");
+    localStorage.setItem("isAuthenticated", "false");
+
     await act(async () => {
       render(<App />);
     });
@@ -77,14 +88,20 @@ describe("App", () => {
       fireEvent.click(cityOption);
     });
 
-    const storedCities = JSON.parse(localStorage.getItem("mostViewedCities"));
-    expect(storedCities).toHaveLength(1);
-    expect(storedCities[0].name).toBe("Vilnius");
-
-    expect(logService.logCityView).toHaveBeenCalledWith("Vilnius");
+    await waitFor(() => {
+      const storedCities = JSON.parse(localStorage.getItem("mostViewedCities"));
+      expect(storedCities).toHaveLength(1);
+      expect(storedCities[0].name).toBe("Vilnius");
+      expect(logService.logCityView).toHaveBeenCalledWith(
+        expect.objectContaining({ city: "Vilnius" })
+      );
+    });
   });
 
   it("limits most viewed cities to 3", async () => {
+    localStorage.setItem("isGuest", "true");
+    localStorage.setItem("isAuthenticated", "false");
+
     const savedCities = [
       {
         code: "vilnius",

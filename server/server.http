@@ -31,9 +31,20 @@ Authorization: Bearer <JWT_TOKEN>
 
 {
   "city": "Vilnius",
-  "timestamp": "2025-10-05T12:00:00Z"
+  "timestamp": "2025-10-05T12:00:00Z",
+  "temperatureC": 12.5,
+  "feelsLikeC": 10.1,
+  "conditions": "Cloudy"
 }
 
 ### Get user history
 GET {{server_HostAddress}}/api/log/history
+Authorization: Bearer <JWT_TOKEN>
+
+### Get top viewed cities
+GET {{server_HostAddress}}/api/log/top-cities?take=5
+Authorization: Bearer <JWT_TOKEN>
+
+### Get hottest and coldest logged entries
+GET {{server_HostAddress}}/api/log/extremes
 Authorization: Bearer <JWT_TOKEN>
