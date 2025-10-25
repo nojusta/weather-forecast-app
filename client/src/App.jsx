@@ -30,7 +30,6 @@ function App() {
 
   return (
     <Layout>
-      {/* Conditionally render UserMenu only if LoginRegister is not visible */}
       {!showLoginRegister && (
         <div className="absolute top-4 right-4">
           <UserMenu
