@@ -83,6 +83,7 @@ const formatTimestamp = (timestamp) => {
     return new Intl.DateTimeFormat("en-GB", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone: "Europe/Vilnius",
     }).format(new Date(timestamp));
   } catch {
     return timestamp;

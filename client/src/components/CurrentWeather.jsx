@@ -10,12 +10,14 @@ const CurrentWeather = ({ data }) => {
   const formattedTime = dateTime.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Vilnius",
   });
   const formattedDate = dateTime.toLocaleDateString([], {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "Europe/Vilnius",
   });
 
   return (

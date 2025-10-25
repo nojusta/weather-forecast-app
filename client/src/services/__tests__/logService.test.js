@@ -23,7 +23,7 @@ describe("Log Service", () => {
     it("should log city view successfully", async () => {
       axios.post.mockResolvedValueOnce({ data: { success: true } });
 
-      await logCityView("Vilnius");
+      await logCityView({ city: "Vilnius", temperatureC: 15 });
 
       expect(axios.post).toHaveBeenCalledWith(
         expect.stringContaining("/api/log"),
@@ -42,7 +42,7 @@ describe("Log Service", () => {
     it("should handle errors gracefully", async () => {
       axios.post.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(logCityView("Vilnius")).resolves.not.toThrow();
+      await expect(logCityView({ city: "Vilnius" })).resolves.not.toThrow();
 
       expect(console.error).toHaveBeenCalled();
     });
@@ -50,7 +50,7 @@ describe("Log Service", () => {
     it("should skip logging when the user is not authenticated", async () => {
       localStorage.removeItem("authToken");
 
-      await logCityView("Vilnius");
+      await logCityView({ city: "Vilnius" });
 
       expect(axios.post).not.toHaveBeenCalled();
     });

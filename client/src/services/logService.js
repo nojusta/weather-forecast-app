@@ -29,7 +29,13 @@ const buildAuthConfig = () => {
   };
 };
 
-export const logCityView = async (cityName) => {
+export const logCityView = async ({
+  city,
+  timestamp,
+  temperatureC,
+  feelsLikeC,
+  conditions,
+}) => {
   const authConfig = buildAuthConfig();
 
   if (!authConfig) {
@@ -40,8 +46,11 @@ export const logCityView = async (cityName) => {
     await axios.post(
       `${API_URL}/api/log`,
       {
-        city: cityName,
-        timestamp: new Date().toISOString(),
+        city,
+        timestamp: timestamp ?? new Date().toISOString(),
+        temperatureC,
+        feelsLikeC,
+        conditions,
       },
       authConfig
     );
