@@ -17,6 +17,9 @@ namespace server.Models
         public bool Active { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastTriggeredAt { get; set; }
+        public int? QuietHoursStart { get; set; }
+        public int? QuietHoursEnd { get; set; }
+        public bool DigestEnabled { get; set; }
     }
 
     public enum AlertDeliveryStatus
@@ -35,6 +38,7 @@ namespace server.Models
         public DateTime AttemptedAt { get; set; } = DateTime.UtcNow;
         public string? ErrorMessage { get; set; }
         public string? Payload { get; set; }
+        public DateTime? DigestBatchDate { get; set; }
     }
 
     public class AlertRuleRequest
@@ -44,5 +48,8 @@ namespace server.Models
         public AlertConditionType ConditionType { get; set; }
         public double ThresholdC { get; set; }
         public bool Active { get; set; } = true;
+        public int? QuietHoursStart { get; set; }
+        public int? QuietHoursEnd { get; set; }
+        public bool DigestEnabled { get; set; }
     }
 }

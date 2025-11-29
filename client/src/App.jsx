@@ -55,6 +55,7 @@ function App() {
     update: updateAlert,
     remove: deleteAlert,
     reload: reloadAlerts,
+    runDigestNow,
   } = useAlerts(isAuthenticated);
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
 
@@ -146,10 +147,14 @@ function App() {
             conditionType: payload.conditionType,
             thresholdC: payload.thresholdC,
             active: payload.active,
+            quietHoursStart: payload.quietHoursStart,
+            quietHoursEnd: payload.quietHoursEnd,
+            digestEnabled: payload.digestEnabled,
           })
         }
         onDelete={deleteAlert}
         onRefresh={reloadAlerts}
+        onRunDigest={runDigestNow}
         selectedCity={selectedCity}
       />
     </Layout>

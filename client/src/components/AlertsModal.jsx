@@ -9,6 +9,9 @@ const defaultForm = {
   conditionType: "Below",
   thresholdC: "",
   active: true,
+  quietHoursStart: "",
+  quietHoursEnd: "",
+  digestEnabled: false,
 };
 
 const AlertsModal = ({
@@ -25,10 +28,13 @@ const AlertsModal = ({
   onRefresh,
   selectedCity,
   cities,
+  onRunDigest,
 }) => {
   const [form, setForm] = useState(defaultForm);
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [digestLoading, setDigestLoading] = useState(false);
+  const [digestLocked, setDigestLocked] = useState(false);
   const filteredCities = useFilteredCities(cities, searchTerm);
 
   const resetForm = useCallback(() => {
@@ -40,6 +46,9 @@ const AlertsModal = ({
             conditionType: "Below",
             thresholdC: "",
             active: true,
+            quietHoursStart: "",
+            quietHoursEnd: "",
+            digestEnabled: false,
           }
         : defaultForm
     );
@@ -55,6 +64,11 @@ const AlertsModal = ({
       conditionType: form.conditionType === "Above" ? 1 : 0,
       thresholdC: Number(form.thresholdC),
       active: form.active,
+      quietHoursStart:
+        form.quietHoursStart === "" ? null : Number(form.quietHoursStart),
+      quietHoursEnd:
+        form.quietHoursEnd === "" ? null : Number(form.quietHoursEnd),
+      digestEnabled: form.digestEnabled,
     };
     const ok = await onCreate(payload);
     if (ok) {
@@ -198,6 +212,65 @@ const AlertsModal = ({
                 />
                 Active
               </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-slate-600">
+                    Quiet hours start (local)
+                  </label>
+                  <select
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={form.quietHoursStart}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        quietHoursStart: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">None</option>
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-600">
+                    Quiet hours end (local)
+                  </label>
+                  <select
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={form.quietHoursEnd}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        quietHoursEnd: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">None</option>
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={form.digestEnabled}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      digestEnabled: e.target.checked,
+                    }))
+                  }
+                />
+                Daily digest (07:00 Europe/Vilnius)
+              </label>
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition"
@@ -218,6 +291,24 @@ const AlertsModal = ({
                 Refresh
               </button>
             </div>
+            <button
+              onClick={async () => {
+                if (digestLocked) return;
+                setDigestLoading(true);
+                setDigestLocked(true);
+                await onRunDigest();
+                setDigestLoading(false);
+                setTimeout(() => setDigestLocked(false), 60000); // 60s lock to avoid spamming
+              }}
+              disabled={digestLoading || digestLocked}
+              className={`mb-3 inline-flex items-center justify-center rounded-lg bg-emerald-600 text-white text-sm px-3 py-2 transition ${
+                digestLoading || digestLocked
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-emerald-700"
+              }`}
+            >
+              {digestLoading ? "Sending..." : digestLocked ? "On cooldown" : "Send digest now"}
+            </button>
             {loading && <p className="text-sm text-slate-500">Loading...</p>}
             {error && <p className="text-sm text-red-500">{error}</p>}
             {!loading && alerts.length === 0 && (
@@ -238,6 +329,24 @@ const AlertsModal = ({
                     <p className="text-xs text-slate-500">
                       Code: {alert.placeCode}
                     </p>
+                    {(alert.quietHoursStart !== null ||
+                      alert.quietHoursEnd !== null) && (
+                      <p className="text-xs text-slate-500">
+                        Quiet:{" "}
+                        {alert.quietHoursStart !== null
+                          ? `${alert.quietHoursStart}:00`
+                          : "-"}{" "}
+                        →{" "}
+                        {alert.quietHoursEnd !== null
+                          ? `${alert.quietHoursEnd}:00`
+                          : "-"}
+                      </p>
+                    )}
+                    {alert.digestEnabled && (
+                      <p className="text-xs text-amber-600 font-semibold">
+                        Digest mode
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1 text-xs text-slate-600">
@@ -342,6 +451,7 @@ AlertsModal.propTypes = {
   onRefresh: PropTypes.func.isRequired,
   selectedCity: PropTypes.object,
   cities: PropTypes.array.isRequired,
+  onRunDigest: PropTypes.func.isRequired,
 };
 
 AlertsModal.defaultProps = {

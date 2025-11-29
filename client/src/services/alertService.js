@@ -91,3 +91,16 @@ export const getAlertStats = async () => {
     return null;
   }
 };
+
+export const runDigestNow = async () => {
+  const config = authConfigOrNull();
+  if (!config) return false;
+
+  try {
+    await axios.post(`${API_URL}/api/alerts/digest/run-now`, {}, config);
+    return true;
+  } catch (error) {
+    console.error("Failed to run digest now:", error);
+    return false;
+  }
+};

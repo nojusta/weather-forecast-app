@@ -6,6 +6,7 @@ import {
   deleteAlert,
   getAlertDeliveries,
   getAlertStats,
+  runDigestNow,
 } from "../services/alertService";
 
 const initialState = {
@@ -86,6 +87,18 @@ const useAlerts = (isAuthenticated) => {
     [isAuthenticated, loadAlerts]
   );
 
+  const triggerDigest = useCallback(
+    async () => {
+      if (!isAuthenticated) return false;
+      const ok = await runDigestNow();
+      if (ok) {
+        await loadAlerts();
+      }
+      return ok;
+    },
+    [isAuthenticated, loadAlerts]
+  );
+
   useEffect(() => {
     if (isAuthenticated) {
       loadAlerts();
@@ -100,6 +113,7 @@ const useAlerts = (isAuthenticated) => {
     update,
     remove,
     reload: loadAlerts,
+    runDigestNow: triggerDigest,
   };
 };
 

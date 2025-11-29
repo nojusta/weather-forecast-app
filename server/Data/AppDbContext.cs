@@ -63,6 +63,9 @@ namespace server.Data
                 entity.Property(e => e.ThresholdC).IsRequired();
                 entity.Property(e => e.CreatedAt).IsRequired();
                 entity.Property(e => e.Active).IsRequired();
+                entity.Property(e => e.DigestEnabled).IsRequired();
+                entity.Property(e => e.QuietHoursStart);
+                entity.Property(e => e.QuietHoursEnd);
                 entity.HasIndex(e => new { e.UserId, e.PlaceCode, e.ConditionType, e.ThresholdC, e.Active });
             });
 
@@ -71,6 +74,7 @@ namespace server.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Status).IsRequired();
                 entity.Property(e => e.AttemptedAt).IsRequired();
+                entity.Property(e => e.DigestBatchDate);
                 entity.HasOne(e => e.AlertRule)
                       .WithMany()
                       .HasForeignKey(e => e.AlertRuleId)
