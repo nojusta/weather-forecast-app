@@ -137,6 +137,7 @@ function App() {
         stats={alertStats}
         loading={alertsLoading}
         error={alertsError}
+        cities={cities}
         onCreate={createAlert}
         onUpdate={(id, payload) =>
           updateAlert(id, {

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal";
+import useFilteredCities from "../hooks/useFilteredCities";
 
 const defaultForm = {
   city: "",
@@ -23,8 +24,11 @@ const AlertsModal = ({
   onDelete,
   onRefresh,
   selectedCity,
+  cities,
 }) => {
   const [form, setForm] = useState(defaultForm);
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredCities = useFilteredCities(cities, searchTerm);
 
   const resetForm = () => {
     setForm(
@@ -38,6 +42,7 @@ const AlertsModal = ({
           }
         : defaultForm
     );
+    setSearchTerm("");
   };
 
   const handleSubmit = async (e) => {
@@ -57,6 +62,12 @@ const AlertsModal = ({
 
   const groupedDeliveries = useMemo(() => deliveries?.slice(0, 10) ?? [], [deliveries]);
 
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, selectedCity]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Weather Alerts" maxWidth="max-w-4xl">
       <div className="flex flex-col gap-6">
@@ -67,7 +78,7 @@ const AlertsModal = ({
         </section>
 
         <section className="grid md:grid-cols-2 gap-6">
-          <div className="border border-slate-100 rounded-2xl p-4">
+          <div className="border border-slate-100 rounded-2xl p-4 bg-gradient-to-br from-blue-50 to-white">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-slate-800">Nauja taisyklė</h3>
               <button
@@ -79,22 +90,40 @@ const AlertsModal = ({
             </div>
             <form className="space-y-3" onSubmit={handleSubmit}>
               <div>
-                <label className="text-sm text-slate-600">Miestas</label>
+                <label className="text-sm text-slate-600">Pasirinkite miestą</label>
                 <input
                   className="w-full border rounded-lg px-3 py-2"
-                  value={form.city}
-                  onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-                  required
+                  placeholder="Pradėkite rašyti..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-              </div>
-              <div>
-                <label className="text-sm text-slate-600">Place code (pvz. vilnius)</label>
-                <input
-                  className="w-full border rounded-lg px-3 py-2"
-                  value={form.placeCode}
-                  onChange={(e) => setForm((prev) => ({ ...prev, placeCode: e.target.value }))}
-                  required
-                />
+                {filteredCities.length > 0 && searchTerm.trim() !== "" && (
+                  <div className="mt-1 border border-slate-200 rounded-lg max-h-48 overflow-y-auto bg-white shadow-sm">
+                    {filteredCities.map((city) => (
+                      <button
+                        key={city.code}
+                        type="button"
+                        className="block w-full text-left px-3 py-2 hover:bg-blue-50"
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            city: city.name,
+                            placeCode: city.code,
+                          }));
+                          setSearchTerm(city.name);
+                        }}
+                      >
+                        <span className="font-medium text-slate-800">{city.name}</span>
+                        <span className="text-xs text-slate-500 ml-2">{city.administrativeDivision}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {form.city && form.placeCode && (
+                  <p className="text-xs text-emerald-700 mt-1">
+                    Pasirinkta: {form.city} ({form.placeCode})
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -130,7 +159,7 @@ const AlertsModal = ({
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition"
-                disabled={loading}
+                disabled={loading || !form.placeCode}
               >
                 Sukurti
               </button>
@@ -156,7 +185,7 @@ const AlertsModal = ({
               {alerts.map((alert) => (
                 <li
                   key={alert.id}
-                  className="border border-slate-100 rounded-xl px-3 py-2 flex items-center justify-between"
+                  className="border border-slate-100 rounded-xl px-3 py-2 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white"
                 >
                   <div>
                     <p className="font-semibold text-slate-800">{alert.city}</p>
@@ -258,6 +287,7 @@ AlertsModal.propTypes = {
   onDelete: PropTypes.func.isRequired,
   onRefresh: PropTypes.func.isRequired,
   selectedCity: PropTypes.object,
+  cities: PropTypes.array.isRequired,
 };
 
 AlertsModal.defaultProps = {
