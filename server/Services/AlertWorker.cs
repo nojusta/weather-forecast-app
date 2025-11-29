@@ -6,7 +6,7 @@ namespace server.Services
     public class AlertWorker : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly TimeSpan _interval = TimeSpan.FromMinutes(15);
+        private readonly TimeSpan _interval = TimeSpan.FromMinutes(1);
 
         public AlertWorker(IServiceScopeFactory scopeFactory)
         {
