@@ -60,7 +60,10 @@ const AlertsModal = ({
     }
   };
 
-  const groupedDeliveries = useMemo(() => deliveries?.slice(0, 10) ?? [], [deliveries]);
+  const groupedDeliveries = useMemo(
+    () => deliveries?.slice(0, 10) ?? [],
+    [deliveries]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -69,31 +72,39 @@ const AlertsModal = ({
   }, [isOpen, selectedCity]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Weather Alerts" maxWidth="max-w-4xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Weather Alerts"
+      maxWidth="max-w-4xl"
+    >
       <div className="flex flex-col gap-6">
         <section className="grid gap-4 md:grid-cols-3">
-          <StatCard label="Taisyklės" value={stats?.totalRules ?? alerts.length} />
-          <StatCard label="Aktyvios" value={stats?.activeRules ?? alerts.filter((a) => a.active).length} />
-          <StatCard label="Išsiųsta" value={stats?.sentCount ?? 0} />
+          <StatCard label="Rules" value={stats?.totalRules ?? alerts.length} />
+          <StatCard
+            label="Active"
+            value={stats?.activeRules ?? alerts.filter((a) => a.active).length}
+          />
+          <StatCard label="Sent" value={stats?.sentCount ?? 0} />
         </section>
 
         <section className="grid md:grid-cols-2 gap-6">
           <div className="border border-slate-100 rounded-2xl p-4 bg-gradient-to-br from-blue-50 to-white">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-slate-800">Nauja taisyklė</h3>
+              <h3 className="font-semibold text-slate-800">New Rule</h3>
               <button
                 onClick={resetForm}
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
-                Užpildyti iš naujo
+                Reset Form
               </button>
             </div>
             <form className="space-y-3" onSubmit={handleSubmit}>
               <div>
-                <label className="text-sm text-slate-600">Pasirinkite miestą</label>
+                <label className="text-sm text-slate-600">Select a City</label>
                 <input
                   className="w-full border rounded-lg px-3 py-2"
-                  placeholder="Pradėkite rašyti..."
+                  placeholder="Start typing..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -113,37 +124,53 @@ const AlertsModal = ({
                           setSearchTerm(city.name);
                         }}
                       >
-                        <span className="font-medium text-slate-800">{city.name}</span>
-                        <span className="text-xs text-slate-500 ml-2">{city.administrativeDivision}</span>
+                        <span className="font-medium text-slate-800">
+                          {city.name}
+                        </span>
+                        <span className="text-xs text-slate-500 ml-2">
+                          {city.administrativeDivision}
+                        </span>
                       </button>
                     ))}
                   </div>
                 )}
                 {form.city && form.placeCode && (
                   <p className="text-xs text-emerald-700 mt-1">
-                    Pasirinkta: {form.city} ({form.placeCode})
+                    Selected: {form.city} ({form.placeCode})
                   </p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-slate-600">Sąlyga</label>
+                  <label className="text-sm text-slate-600">Condition</label>
                   <select
                     className="w-full border rounded-lg px-3 py-2"
                     value={form.conditionType}
-                    onChange={(e) => setForm((prev) => ({ ...prev, conditionType: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        conditionType: e.target.value,
+                      }))
+                    }
                   >
-                    <option value="Below">Žemiau</option>
-                    <option value="Above">Aukščiau</option>
+                    <option value="Below">Below</option>
+                    <option value="Above">Above</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm text-slate-600">Slenkstis (°C)</label>
+                  <label className="text-sm text-slate-600">
+                    Threshold (°C)
+                  </label>
                   <input
                     type="number"
                     className="w-full border rounded-lg px-3 py-2"
                     value={form.thresholdC}
-                    onChange={(e) => setForm((prev) => ({ ...prev, thresholdC: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        thresholdC: e.target.value,
+                      }))
+                    }
                     required
                   />
                 </div>
@@ -152,34 +179,36 @@ const AlertsModal = ({
                 <input
                   type="checkbox"
                   checked={form.active}
-                  onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, active: e.target.checked }))
+                  }
                 />
-                Aktyvi
+                Active
               </label>
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition"
                 disabled={loading || !form.placeCode}
               >
-                Sukurti
+                Create
               </button>
             </form>
           </div>
 
           <div className="border border-slate-100 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-slate-800">Mano taisyklės</h3>
+              <h3 className="font-semibold text-slate-800">My Rules</h3>
               <button
                 onClick={onRefresh}
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
-                Atnaujinti
+                Refresh
               </button>
             </div>
-            {loading && <p className="text-sm text-slate-500">Kraunama...</p>}
+            {loading && <p className="text-sm text-slate-500">Loading...</p>}
             {error && <p className="text-sm text-red-500">{error}</p>}
             {!loading && alerts.length === 0 && (
-              <p className="text-sm text-slate-500">Dar nėra taisyklių.</p>
+              <p className="text-sm text-slate-500">No rules yet.</p>
             )}
             <ul className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {alerts.map((alert) => (
@@ -190,9 +219,12 @@ const AlertsModal = ({
                   <div>
                     <p className="font-semibold text-slate-800">{alert.city}</p>
                     <p className="text-xs text-slate-500">
-                      {alert.conditionType === 0 ? "Žemiau" : "Aukščiau"} {alert.thresholdC}°C
+                      {alert.conditionType === 0 ? "Below" : "Above"}{" "}
+                      {alert.thresholdC}°C
                     </p>
-                    <p className="text-xs text-slate-500">Code: {alert.placeCode}</p>
+                    <p className="text-xs text-slate-500">
+                      Code: {alert.placeCode}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1 text-xs text-slate-600">
@@ -200,16 +232,19 @@ const AlertsModal = ({
                         type="checkbox"
                         checked={alert.active}
                         onChange={(e) =>
-                          onUpdate(alert.id, { ...alert, active: e.target.checked })
+                          onUpdate(alert.id, {
+                            ...alert,
+                            active: e.target.checked,
+                          })
                         }
                       />
-                      Aktyvi
+                      Active
                     </label>
                     <button
                       onClick={() => onDelete(alert.id)}
                       className="text-xs text-red-500 hover:text-red-700"
                     >
-                      Trinti
+                      Delete
                     </button>
                   </div>
                 </li>
@@ -219,9 +254,11 @@ const AlertsModal = ({
         </section>
 
         <section>
-          <h3 className="font-semibold text-slate-800 mb-2">Paskutiniai siuntimai</h3>
+          <h3 className="font-semibold text-slate-800 mb-2">
+            Recent Deliveries
+          </h3>
           {groupedDeliveries.length === 0 ? (
-            <p className="text-sm text-slate-500">Dar nėra bandymų.</p>
+            <p className="text-sm text-slate-500">No attempts yet.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
               {groupedDeliveries.map((delivery) => (
@@ -246,10 +283,14 @@ const AlertsModal = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
-                    {new Date(delivery.attemptedAt ?? delivery.attemptedat).toLocaleString()}
+                    {new Date(
+                      delivery.attemptedAt ?? delivery.attemptedat
+                    ).toLocaleString()}
                   </p>
                   {delivery.errorMessage && (
-                    <p className="text-xs text-rose-600 mt-1">{delivery.errorMessage}</p>
+                    <p className="text-xs text-rose-600 mt-1">
+                      {delivery.errorMessage}
+                    </p>
                   )}
                 </div>
               ))}
@@ -269,9 +310,9 @@ const StatCard = ({ label, value }) => (
 );
 
 const statusLabel = (status) => {
-  if (status === 1) return "Išsiųsta";
-  if (status === 2) return "Klaida";
-  return "Laukiama";
+  if (status === 1) return "Sent";
+  if (status === 2) return "Error";
+  return "Pending";
 };
 
 AlertsModal.propTypes = {
