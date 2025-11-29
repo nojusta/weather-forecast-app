@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal";
 import useFilteredCities from "../hooks/useFilteredCities";
@@ -28,9 +28,10 @@ const AlertsModal = ({
 }) => {
   const [form, setForm] = useState(defaultForm);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const filteredCities = useFilteredCities(cities, searchTerm);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setForm(
       selectedCity
         ? {
@@ -43,7 +44,8 @@ const AlertsModal = ({
         : defaultForm
     );
     setSearchTerm("");
-  };
+    setDropdownVisible(false);
+  }, [selectedCity]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,7 +71,7 @@ const AlertsModal = ({
     if (isOpen) {
       resetForm();
     }
-  }, [isOpen, selectedCity]);
+  }, [isOpen, resetForm]);
 
   return (
     <Modal
@@ -102,44 +104,55 @@ const AlertsModal = ({
             <form className="space-y-3" onSubmit={handleSubmit}>
               <div>
                 <label className="text-sm text-slate-600">Select a City</label>
-                <input
-                  className="w-full border rounded-lg px-3 py-2"
-                  placeholder="Start typing..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {filteredCities.length > 0 && searchTerm.trim() !== "" && (
-                  <div className="mt-1 border border-slate-200 rounded-lg max-h-48 overflow-y-auto bg-white shadow-sm">
-                    {filteredCities.map((city) => (
-                      <button
-                        key={city.code}
-                        type="button"
-                        className="block w-full text-left px-3 py-2 hover:bg-blue-50"
-                        onClick={() => {
-                          setForm((prev) => ({
-                            ...prev,
-                            city: city.name,
-                            placeCode: city.code,
-                          }));
-                          setSearchTerm(city.name);
-                        }}
-                      >
-                        <span className="font-medium text-slate-800">
-                          {city.name}
-                        </span>
-                        <span className="text-xs text-slate-500 ml-2">
-                          {city.administrativeDivision}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+
+                {/* positioning context */}
+                <div className="relative">
+                  <input
+                    className="w-full border rounded-lg px-3 py-2"
+                    placeholder="Start typing..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setDropdownVisible(true);
+                    }}
+                  />
+
+                  {dropdownVisible && filteredCities.length > 0 && (
+                    <div className="absolute left-0 right-0 mt-1 border border-slate-200 rounded-lg max-h-48 overflow-y-auto bg-white shadow-lg z-50">
+                      {filteredCities.map((city) => (
+                        <button
+                          key={city.code}
+                          type="button"
+                          className="block w-full text-left px-3 py-2 hover:bg-blue-50"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              city: city.name,
+                              placeCode: city.code,
+                            }));
+                            setSearchTerm(city.name);
+                            setDropdownVisible(false);
+                          }}
+                        >
+                          <span className="font-medium text-slate-800">
+                            {city.name}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-2">
+                            {city.administrativeDivision}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {form.city && form.placeCode && (
                   <p className="text-xs text-emerald-700 mt-1">
                     Selected: {form.city} ({form.placeCode})
                   </p>
                 )}
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm text-slate-600">Condition</label>
