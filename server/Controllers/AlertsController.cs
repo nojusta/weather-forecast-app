@@ -93,6 +93,16 @@ namespace server.Controllers
             return Ok(stats);
         }
 
+        [HttpPost("digest/run-now")]
+        public async Task<IActionResult> RunDigestNow(CancellationToken cancellationToken)
+        {
+            var userId = GetUserId();
+            if (userId == null) return Unauthorized();
+
+            await _alertService.ProcessDigestsAsync(cancellationToken, forceRun: true);
+            return Accepted();
+        }
+
         private string? GetUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

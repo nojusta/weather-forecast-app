@@ -37,6 +37,7 @@ namespace server.Services
             using var scope = _scopeFactory.CreateScope();
             var alertService = scope.ServiceProvider.GetRequiredService<AlertService>();
             await alertService.EvaluateActiveRulesAsync(cancellationToken);
+            await alertService.ProcessDigestsAsync(cancellationToken, forceRun: false);
         }
     }
 }
