@@ -160,13 +160,33 @@ namespace server.Services
 
             foreach (var rule in rules)
             {
-                var temp = temps.GetValueOrDefault(rule.PlaceCode);
+               var temp = temps.GetValueOrDefault(rule.PlaceCode);
+
+                _logger.LogWarning(
+                    "DEBUG | City={City}, PlaceCode={Code}, Temp={Temp}, Threshold={Threshold}, Type={Type}, LastTriggered={Last}",
+                    rule.City,
+                    rule.PlaceCode,
+                    temp,
+                    rule.ThresholdC,
+                    rule.ConditionType,
+                    rule.LastTriggeredAt
+                );
+
                 if (!temp.HasValue)
                 {
+                    _logger.LogWarning("DEBUG | Skipping rule {Id} — temp is null", rule.Id);
                     continue;
                 }
 
-                if (!ShouldTrigger(rule, temp.Value, now))
+                var shouldTrigger = ShouldTrigger(rule, temp.Value, now);
+
+                _logger.LogWarning(
+                    "DEBUG | Rule {Id} shouldTrigger={ShouldTrigger}",
+                    rule.Id,
+                    shouldTrigger
+                );
+
+                if (!shouldTrigger)
                 {
                     continue;
                 }
@@ -209,7 +229,7 @@ namespace server.Services
                     continue;
                 }
 
-                var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, cancellationToken);
+                var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
                 delivery.Status = success ? AlertDeliveryStatus.Sent : AlertDeliveryStatus.Failed;
                 delivery.ErrorMessage = error;
                 rule.LastTriggeredAt = now;
@@ -239,16 +259,42 @@ namespace server.Services
 
         private static string BuildEmailBody(AlertRule rule, double temp, DateTime now)
         {
-            return $@"Hi,
+            var condition = rule.ConditionType == AlertConditionType.Below ? "žemiau" : "aukščiau";
 
-Your alert for {rule.City} was triggered.
-
-Current temperature: {temp:F1}°C
-Condition: {rule.ConditionType} {rule.ThresholdC:F1}°C
-Time: {now:yyyy-MM-dd HH:mm:ss} UTC
-
-You can adjust or disable this alert in your account.
-";
+            return $@"
+<html>
+  <body style=""font-family: Arial, sans-serif; background: #f7fafc; padding: 24px;"">
+    <div style=""max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;"">
+      <div style=""background: linear-gradient(120deg, #2563eb, #38bdf8); padding: 18px 24px; color: #fff;"">
+        <h2 style=""margin:0; font-size: 20px;"">Weather Alert</h2>
+        <p style=""margin:6px 0 0 0; font-size: 14px;"">{rule.City}</p>
+      </div>
+      <div style=""padding: 20px 24px; color: #1f2937;"">
+        <p style=""margin-top:0;"">Buvo suaktyvintas orų perspėjimas.</p>
+        <table style=""width:100%; border-collapse: collapse; margin: 12px 0;"">
+          <tr>
+            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Dabartinė temperatūra</td>
+            <td style=""padding:8px; text-align:right; color:#111827;"">{temp:F1}°C</td>
+          </tr>
+          <tr>
+            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Sąlyga</td>
+            <td style=""padding:8px; text-align:right; color:#111827;"">{condition} {rule.ThresholdC:F1}°C</td>
+          </tr>
+          <tr>
+            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Laikas</td>
+            <td style=""padding:8px; text-align:right; color:#111827;"">{now:yyyy-MM-dd HH:mm:ss} UTC</td>
+          </tr>
+        </table>
+        <p style=""margin:12px 0 0 0; font-size: 14px; color:#4b5563;"">
+          Galite koreguoti arba išjungti taisyklę prisijungę prie savo paskyros.
+        </p>
+      </div>
+      <div style=""background:#f3f4f6; padding:12px 24px; font-size:12px; color:#6b7280;"">
+        Weather Alerts · Automatizuotas pranešimas
+      </div>
+    </div>
+  </body>
+</html>";
         }
 
         private static void ValidateRequest(AlertRuleRequest request)

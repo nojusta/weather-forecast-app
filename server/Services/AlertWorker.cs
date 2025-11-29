@@ -15,6 +15,7 @@ namespace server.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            Console.WriteLine("ALERT WORKER STARTED");
             await RunOnce(stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)

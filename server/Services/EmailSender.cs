@@ -25,7 +25,7 @@ namespace server.Services
 
         public bool IsConfigured => _enabled;
 
-        public async Task<(bool success, string? error)> SendAsync(string to, string subject, string body, CancellationToken cancellationToken)
+        public async Task<(bool success, string? error)> SendAsync(string to, string subject, string body, bool isHtml, CancellationToken cancellationToken)
         {
             if (!_enabled)
             {
@@ -36,7 +36,7 @@ namespace server.Services
             {
                 using var client = new SmtpClient(_host, _port)
                 {
-                    EnableSsl = true,
+                    EnableSsl = false,
                     Credentials = (!string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password))
                         ? new NetworkCredential(_username, _password)
                         : CredentialCache.DefaultNetworkCredentials
@@ -47,7 +47,7 @@ namespace server.Services
                     From = new MailAddress(_from!),
                     Subject = subject,
                     Body = body,
-                    IsBodyHtml = false
+                    IsBodyHtml = isHtml
                 };
 
                 message.To.Add(to);
