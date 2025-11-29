@@ -48,3 +48,28 @@ Authorization: Bearer <JWT_TOKEN>
 ### Get hottest and coldest logged entries
 GET {{server_HostAddress}}/api/log/extremes
 Authorization: Bearer <JWT_TOKEN>
+
+### Create alert rule
+POST {{server_HostAddress}}/api/alerts
+Content-Type: application/json
+Authorization: Bearer <JWT_TOKEN>
+
+{
+  "city": "Vilnius",
+  "placeCode": "vilnius",
+  "conditionType": 0,
+  "thresholdC": -5,
+  "active": true
+}
+
+### List my alert rules
+GET {{server_HostAddress}}/api/alerts
+Authorization: Bearer <JWT_TOKEN>
+
+### Get recent alert deliveries
+GET {{server_HostAddress}}/api/alerts/deliveries?take=20
+Authorization: Bearer <JWT_TOKEN>
+
+### Get alert stats
+GET {{server_HostAddress}}/api/alerts/stats
+Authorization: Bearer <JWT_TOKEN>

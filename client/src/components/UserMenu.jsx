@@ -10,6 +10,7 @@ const UserMenu = ({
   onLogin,
   onOpenHistory,
   onOpenStats,
+  onOpenAlerts,
 }) => {
   if (!isAuthenticated && !isGuest) {
     return null;
@@ -61,6 +62,18 @@ const UserMenu = ({
                       </button>
                     )}
                   </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={onOpenAlerts}
+                        className={`${
+                          active ? "bg-blue-100 text-blue-600" : "text-gray-700"
+                        } group flex items-center w-full px-4 py-2 text-sm`}
+                      >
+                        Alerts
+                      </button>
+                    )}
+                  </Menu.Item>
                 </>
               )}
             </div>
@@ -106,6 +119,7 @@ UserMenu.propTypes = {
   onLogin: PropTypes.func.isRequired,
   onOpenHistory: PropTypes.func.isRequired,
   onOpenStats: PropTypes.func.isRequired,
+  onOpenAlerts: PropTypes.func.isRequired,
 };
 
 export default UserMenu;

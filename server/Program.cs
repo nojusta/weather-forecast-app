@@ -39,6 +39,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CityLogService>();
+builder.Services.AddScoped<InsightService>();
+builder.Services.AddScoped<EmailSender>();
+builder.Services.AddScoped<WeatherLookupService>();
+builder.Services.AddScoped<AlertService>();
+builder.Services.AddHostedService<InsightAggregationService>();
+builder.Services.AddHostedService<AlertWorker>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

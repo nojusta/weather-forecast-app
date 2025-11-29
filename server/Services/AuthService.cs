@@ -107,5 +107,17 @@ namespace server.Services
         
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public async Task<User?> GetUserByIdAsync(string userId)
+        {
+            if (!int.TryParse(userId, out var id))
+            {
+                return null;
+            }
+
+            return await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
     }
 }
