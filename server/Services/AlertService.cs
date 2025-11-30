@@ -13,7 +13,11 @@ namespace server.Services
         private readonly WeatherLookupService _weatherLookup;
         private readonly ILogger<AlertService> _logger;
         private const int MinMinutesBetweenTriggers = 60;
-        private const int DigestSendHourLocal = 7; // 07:00 Europe/Vilnius
+        private const int DefaultDigestSendHourLocal = 7; // 07:00 Europe/Vilnius
+        private const int EmailThrottleMilliseconds = 2000; // space out sends to avoid rate limits (Mailtrap friendly)
+
+        private readonly object _sendLock = new();
+        private DateTime _nextSendUtc = DateTime.MinValue;
 
         public AlertService(
             AppDbContext context,
@@ -250,6 +254,8 @@ namespace server.Services
                     continue;
                 }
 
+                await ThrottleAsync(cancellationToken);
+
                 var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
                 immediateDelivery.Status = success ? AlertDeliveryStatus.Sent : AlertDeliveryStatus.Failed;
                 immediateDelivery.ErrorMessage = error;
@@ -268,11 +274,6 @@ namespace server.Services
 
             var now = DateTime.UtcNow;
             var vilniusNow = ToVilnius(now);
-            // Scheduled sends respect the configured hour; manual (forceRun) bypasses it
-            if (!forceRun && vilniusNow.Hour < DigestSendHourLocal)
-            {
-                return;
-            }
             var windowStart = vilniusNow.Date.AddDays(-1); // last 24h window
             var today = vilniusNow.Date;
 
@@ -299,6 +300,12 @@ namespace server.Services
 
             foreach (var group in groups)
             {
+                var sendHour = group.First().AlertRule?.DigestSendHourLocal ?? DefaultDigestSendHourLocal;
+                if (!forceRun && vilniusNow.Hour < sendHour)
+                {
+                    continue;
+                }
+
                 var user = await _authService.GetUserByIdAsync(group.Key);
                 if (user == null)
                 {
@@ -318,6 +325,8 @@ namespace server.Services
 
                 var subject = "Dienos orų įspėjimų santrauka";
                 var body = BuildDigestEmail(items, vilniusNow);
+
+                await ThrottleAsync(cancellationToken);
 
                 var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
 
@@ -384,6 +393,30 @@ namespace server.Services
             {
                 return utcNow;
             }
+        }
+
+        private Task ThrottleAsync(CancellationToken cancellationToken)
+        {
+            if (EmailThrottleMilliseconds <= 0)
+            {
+                return Task.CompletedTask;
+            }
+
+            int delayMs = 0;
+            lock (_sendLock)
+            {
+                var now = DateTime.UtcNow;
+                if (now < _nextSendUtc)
+                {
+                    delayMs = (int)Math.Ceiling((_nextSendUtc - now).TotalMilliseconds);
+                }
+
+                _nextSendUtc = now.AddMilliseconds(EmailThrottleMilliseconds);
+            }
+
+            return delayMs > 0
+                ? Task.Delay(delayMs, cancellationToken)
+                : Task.CompletedTask;
         }
 
         private static string BuildEmailBody(AlertRule rule, double temp, DateTime now)

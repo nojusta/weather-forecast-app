@@ -20,6 +20,7 @@ namespace server.Models
         public int? QuietHoursStart { get; set; }
         public int? QuietHoursEnd { get; set; }
         public bool DigestEnabled { get; set; }
+        public int? DigestSendHourLocal { get; set; }
     }
 
     public enum AlertDeliveryStatus
@@ -51,5 +52,6 @@ namespace server.Models
         public int? QuietHoursStart { get; set; }
         public int? QuietHoursEnd { get; set; }
         public bool DigestEnabled { get; set; }
+        public int? DigestSendHourLocal { get; set; }
     }
 }

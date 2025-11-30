@@ -12,6 +12,7 @@ const defaultForm = {
   quietHoursStart: "",
   quietHoursEnd: "",
   digestEnabled: false,
+  digestSendHourLocal: "7",
 };
 
 const AlertsModal = ({
@@ -69,6 +70,8 @@ const AlertsModal = ({
       quietHoursEnd:
         form.quietHoursEnd === "" ? null : Number(form.quietHoursEnd),
       digestEnabled: form.digestEnabled,
+      digestSendHourLocal:
+        form.digestSendHourLocal === "" ? null : Number(form.digestSendHourLocal),
     };
     const ok = await onCreate(payload);
     if (ok) {
@@ -269,8 +272,38 @@ const AlertsModal = ({
                     }))
                   }
                 />
-                Daily digest (07:00 Europe/Vilnius)
+                Daily digest
               </label>
+              {form.digestEnabled && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-slate-600">
+                      Digest send hour (local)
+                    </label>
+                    <select
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={form.digestSendHourLocal}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          digestSendHourLocal: e.target.value,
+                        }))
+                      }
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <option key={i} value={i}>
+                          {i}:00
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center">
+                    <p className="text-xs text-slate-500">
+                      Digest includes triggers from the last 24 hours.
+                    </p>
+                  </div>
+                </div>
+              )}
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition"
