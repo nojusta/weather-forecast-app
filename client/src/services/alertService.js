@@ -97,10 +97,14 @@ export const runDigestNow = async () => {
   if (!config) return false;
 
   try {
-    await axios.post(`${API_URL}/api/alerts/digest/run-now`, {}, config);
-    return true;
+    const response = await axios.post(
+      `${API_URL}/api/alerts/digest/run-now`,
+      {},
+      config
+    );
+    return response.data?.sent ?? 0;
   } catch (error) {
     console.error("Failed to run digest now:", error);
-    return false;
+    return 0;
   }
 };

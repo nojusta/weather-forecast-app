@@ -90,11 +90,9 @@ const useAlerts = (isAuthenticated) => {
   const triggerDigest = useCallback(
     async () => {
       if (!isAuthenticated) return false;
-      const ok = await runDigestNow();
-      if (ok) {
-        await loadAlerts();
-      }
-      return ok;
+      const sent = await runDigestNow();
+      await loadAlerts();
+      return sent;
     },
     [isAuthenticated, loadAlerts]
   );

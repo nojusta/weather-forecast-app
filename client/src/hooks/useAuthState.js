@@ -33,18 +33,40 @@ const useAuthState = () => {
       setShowLoginRegister(false);
       return true;
     } catch {
-      setIsAuthenticated(false);
-      setIsGuest(false);
-      setUser(null);
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("user");
-      localStorage.removeItem("authToken");
+      // Keep token and cached user to avoid aggressive logouts on transient failures
+      const cachedUser = localStorage.getItem("user");
+      if (cachedUser) {
+        const parsed = JSON.parse(cachedUser);
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        setUser(parsed);
+        setShowLoginRegister(false);
+      } else {
+        setIsAuthenticated(false);
+        setIsGuest(false);
+        setUser(null);
+        setShowLoginRegister(true);
+      }
       return false;
     }
   }, []);
 
   useEffect(() => {
     (async () => {
+      // Optimistically restore cached auth state before verifying
+      const cachedUser = localStorage.getItem("user");
+      const cachedAuth = localStorage.getItem("isAuthenticated") === "true";
+      const token = getAuthToken();
+      if (cachedAuth && cachedUser && token) {
+        try {
+          setUser(JSON.parse(cachedUser));
+          setIsAuthenticated(true);
+          setIsGuest(false);
+        } catch {
+          // ignore parse errors
+        }
+      }
+
       const verified = await verifyToken();
       if (verified) return;
 

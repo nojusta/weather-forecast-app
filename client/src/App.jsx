@@ -65,7 +65,7 @@ function App() {
   return (
     <Layout>
       {!showLoginRegister && (
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <UserMenu
             isAuthenticated={isAuthenticated}
             isGuest={isGuest}

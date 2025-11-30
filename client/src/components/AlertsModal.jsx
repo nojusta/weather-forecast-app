@@ -12,7 +12,6 @@ const defaultForm = {
   quietHoursStart: "",
   quietHoursEnd: "",
   digestEnabled: false,
-  digestSendHourLocal: "7",
 };
 
 const AlertsModal = ({
@@ -36,6 +35,10 @@ const AlertsModal = ({
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [digestLoading, setDigestLoading] = useState(false);
   const [digestLocked, setDigestLocked] = useState(false);
+  const [digestHour, setDigestHour] = useState("7");
+  const [digestHourUpdating, setDigestHourUpdating] = useState(false);
+  const [digestHourSaved, setDigestHourSaved] = useState("");
+  const [digestRunStatus, setDigestRunStatus] = useState("");
   const filteredCities = useFilteredCities(cities, searchTerm);
 
   const resetForm = useCallback(() => {
@@ -59,6 +62,7 @@ const AlertsModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const digestEnabled = !!form.digestEnabled;
     const payload = {
       city: form.city.trim(),
       placeCode: form.placeCode.trim(),
@@ -69,9 +73,8 @@ const AlertsModal = ({
         form.quietHoursStart === "" ? null : Number(form.quietHoursStart),
       quietHoursEnd:
         form.quietHoursEnd === "" ? null : Number(form.quietHoursEnd),
-      digestEnabled: form.digestEnabled,
-      digestSendHourLocal:
-        form.digestSendHourLocal === "" ? null : Number(form.digestSendHourLocal),
+      digestEnabled,
+      digestSendHourLocal: digestEnabled ? Number(digestHour) : null,
     };
     const ok = await onCreate(payload);
     if (ok) {
@@ -79,16 +82,59 @@ const AlertsModal = ({
     }
   };
 
-  const groupedDeliveries = useMemo(
-    () => deliveries?.slice(0, 10) ?? [],
-    [deliveries]
-  );
+  const { immediateDeliveries, digestDeliveries } = useMemo(() => {
+    const sorted =
+      deliveries?.sort(
+        (a, b) =>
+          new Date(b.attemptedAt ?? b.attemptedat).getTime() -
+          new Date(a.attemptedAt ?? a.attemptedat).getTime()
+      ) ?? [];
+
+    return {
+      immediateDeliveries: sorted
+        .filter((d) => !d.digestBatchDate)
+        .slice(0, 10),
+      digestDeliveries: sorted.filter((d) => d.digestBatchDate).slice(0, 5),
+    };
+  }, [deliveries]);
 
   useEffect(() => {
     if (isOpen) {
       resetForm();
     }
   }, [isOpen, resetForm]);
+
+  useEffect(() => {
+    const firstWithHour = alerts.find(
+      (a) => a.digestEnabled && a.digestSendHourLocal !== null
+    );
+    if (firstWithHour && firstWithHour.digestSendHourLocal !== null) {
+      setDigestHour(String(firstWithHour.digestSendHourLocal));
+    }
+  }, [alerts]);
+
+  const formatVilnius = (value) => {
+    if (!value) return "";
+    const str = typeof value === "string" ? value : String(value);
+    const normalized =
+      str.includes("Z") || str.includes("+") ? str : `${str}Z`; // treat server timestamps as UTC
+    return new Date(normalized).toLocaleString("lt-LT", {
+      timeZone: "Europe/Vilnius",
+    });
+  };
+
+  const applyDigestHourToAll = async () => {
+    const hourNumber = Number(digestHour);
+    const targets = alerts.filter((a) => a.digestEnabled);
+    if (targets.length === 0) return;
+    setDigestHourUpdating(true);
+    for (const alert of targets) {
+      await onUpdate(alert.id, { ...alert, digestSendHourLocal: hourNumber });
+    }
+    setDigestHourUpdating(false);
+    setDigestHourSaved(`Saved (${hourNumber}:00)`);
+    setTimeout(() => setDigestHourSaved(""), 2000);
+  };
 
   return (
     <Modal
@@ -106,6 +152,8 @@ const AlertsModal = ({
           />
           <StatCard label="Sent" value={stats?.sentCount ?? 0} />
         </section>
+
+        {/* Digest summary moved to bottom */}
 
         <section className="grid md:grid-cols-2 gap-6">
           <div className="border border-slate-100 rounded-2xl p-4 bg-gradient-to-br from-blue-50 to-white">
@@ -272,38 +320,8 @@ const AlertsModal = ({
                     }))
                   }
                 />
-                Daily digest
+                Include in daily digest
               </label>
-              {form.digestEnabled && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm text-slate-600">
-                      Digest send hour (local)
-                    </label>
-                    <select
-                      className="w-full border rounded-lg px-3 py-2"
-                      value={form.digestSendHourLocal}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          digestSendHourLocal: e.target.value,
-                        }))
-                      }
-                    >
-                      {Array.from({ length: 24 }).map((_, i) => (
-                        <option key={i} value={i}>
-                          {i}:00
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-xs text-slate-500">
-                      Digest includes triggers from the last 24 hours.
-                    </p>
-                  </div>
-                </div>
-              )}
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition"
@@ -329,7 +347,13 @@ const AlertsModal = ({
                 if (digestLocked) return;
                 setDigestLoading(true);
                 setDigestLocked(true);
-                await onRunDigest();
+                setDigestRunStatus("");
+                const sent = await onRunDigest();
+                setDigestRunStatus(
+                  sent > 0
+                    ? `Digest sent (${sent} email${sent > 1 ? "s" : ""})`
+                    : "No pending digest to send"
+                );
                 setDigestLoading(false);
                 setTimeout(() => setDigestLocked(false), 60000); // 60s lock to avoid spamming
               }}
@@ -340,8 +364,58 @@ const AlertsModal = ({
                   : "hover:bg-emerald-700"
               }`}
             >
-              {digestLoading ? "Sending..." : digestLocked ? "On cooldown" : "Send digest now"}
+              {digestLoading
+                ? "Sending..."
+                : digestLocked
+                ? "On cooldown"
+                : "Send digest now"}
             </button>
+            <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-slate-700">
+                  Digest send hour:
+                </label>
+                <select
+                  className="border rounded-lg py-1.5 text-sm bg-white"
+                  value={digestHour}
+                  onChange={(e) => setDigestHour(e.target.value)}
+                >
+                  {Array.from({ length: 24 }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {i}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={applyDigestHourToAll}
+                disabled={digestHourUpdating}
+                className={`text-sm px-3 py-1.5 rounded-lg border ${
+                  digestHourUpdating
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {digestHourUpdating ? "Saving..." : "Apply to digest alerts"}
+              </button>
+              <div className="flex items-center gap-2">
+                {digestHourSaved && (
+                  <span className="text-xs text-emerald-600">
+                    {digestHourSaved}
+                  </span>
+                )}
+                {digestRunStatus && (
+                  <span className="text-xs text-slate-600">
+                    {digestRunStatus}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-slate-500">
+                Sets the daily send time for alerts marked “Include in daily
+                digest”.
+              </span>
+            </div>
             {loading && <p className="text-sm text-slate-500">Loading...</p>}
             {error && <p className="text-sm text-red-500">{error}</p>}
             {!loading && alerts.length === 0 && (
@@ -412,11 +486,11 @@ const AlertsModal = ({
           <h3 className="font-semibold text-slate-800 mb-2">
             Recent Deliveries
           </h3>
-          {groupedDeliveries.length === 0 ? (
+          {immediateDeliveries.length === 0 ? (
             <p className="text-sm text-slate-500">No attempts yet.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
-              {groupedDeliveries.map((delivery) => (
+              {immediateDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
                   className="border border-slate-100 rounded-xl p-3 bg-white shadow-sm"
@@ -438,9 +512,9 @@ const AlertsModal = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
-                    {new Date(
+                    {formatVilnius(
                       delivery.attemptedAt ?? delivery.attemptedat
-                    ).toLocaleString()}
+                    )}
                   </p>
                   {delivery.errorMessage && (
                     <p className="text-xs text-rose-600 mt-1">
@@ -452,6 +526,45 @@ const AlertsModal = ({
             </div>
           )}
         </section>
+      </div>
+
+      <div className="flex flex-col gap-2 mt-2">
+        <h3 className="font-semibold text-slate-800">Digest Emails</h3>
+        {digestDeliveries.length === 0 ? (
+          <p className="text-sm text-slate-500">No digest emails yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {digestDeliveries.map((delivery) => (
+              <li
+                key={delivery.id}
+                className="border border-slate-100 rounded-xl p-3 bg-white shadow-sm flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    Digest email sent
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Sent at:{" "}
+                    {formatVilnius(
+                      delivery.attemptedAt ?? delivery.attemptedat
+                    )}
+                  </p>
+                </div>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    delivery.status === 1
+                      ? "bg-emerald-100 text-emerald-700"
+                      : delivery.status === 2
+                      ? "bg-rose-100 text-rose-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {statusLabel(delivery.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Modal>
   );

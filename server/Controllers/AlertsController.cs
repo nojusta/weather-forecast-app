@@ -99,8 +99,8 @@ namespace server.Controllers
             var userId = GetUserId();
             if (userId == null) return Unauthorized();
 
-            await _alertService.ProcessDigestsAsync(cancellationToken, forceRun: true);
-            return Accepted();
+            var sent = await _alertService.ProcessDigestsAsync(cancellationToken, forceRun: true);
+            return Ok(new { sent });
         }
 
         private string? GetUserId()

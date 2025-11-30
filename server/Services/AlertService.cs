@@ -265,11 +265,11 @@ namespace server.Services
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task ProcessDigestsAsync(CancellationToken cancellationToken, bool forceRun = false)
+        public async Task<int> ProcessDigestsAsync(CancellationToken cancellationToken, bool forceRun = false)
         {
             if (!_emailSender.IsConfigured)
             {
-                return;
+                return 0;
             }
 
             var now = DateTime.UtcNow;
@@ -277,26 +277,25 @@ namespace server.Services
             var windowStart = vilniusNow.Date.AddDays(-1); // last 24h window
             var today = vilniusNow.Date;
 
-            var pending = await _context.AlertDeliveries
+            var candidates = await _context.AlertDeliveries
                 .Include(d => d.AlertRule)
                 .Where(d =>
-                    d.Status == AlertDeliveryStatus.Pending
-                    && d.AlertRule!.DigestEnabled
-                    && (
-                        forceRun
-                            ? true
-                            : (d.DigestBatchDate.HasValue
-                               && d.DigestBatchDate.Value >= windowStart
-                               && d.DigestBatchDate.Value <= today)
-                       ))
+                    d.AlertRule!.DigestEnabled
+                    && d.DigestBatchDate.HasValue
+                    && d.DigestBatchDate.Value >= windowStart
+                    && d.DigestBatchDate.Value <= today)
                 .ToListAsync(cancellationToken);
 
-            if (pending.Count == 0)
+            var pending = candidates.Where(d => d.Status == AlertDeliveryStatus.Pending).ToList();
+            var workSet = forceRun ? candidates : pending;
+
+            if (workSet.Count == 0)
             {
-                return;
+                return 0;
             }
 
-            var groups = pending.GroupBy(d => d.AlertRule!.UserId);
+            var groups = workSet.GroupBy(d => d.AlertRule!.UserId);
+            var sentCount = 0;
 
             foreach (var group in groups)
             {
@@ -328,16 +327,46 @@ namespace server.Services
 
                 await ThrottleAsync(cancellationToken);
 
+                await ThrottleAsync(cancellationToken);
+
                 var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
 
-                foreach (var d in group)
+                foreach (var d in group.Where(d => d.Status == AlertDeliveryStatus.Pending))
                 {
                     d.Status = success ? AlertDeliveryStatus.Sent : AlertDeliveryStatus.Failed;
                     d.ErrorMessage = error;
                 }
+
+                if (forceRun && group.Any())
+                {
+                    // Log a manual digest send so it appears in recent deliveries
+                    var markerRuleId = group.First().AlertRule!.Id;
+                    _context.AlertDeliveries.Add(new AlertDelivery
+                    {
+                        AlertRuleId = markerRuleId,
+                        Status = success ? AlertDeliveryStatus.Sent : AlertDeliveryStatus.Failed,
+                        AttemptedAt = now,
+                        DigestBatchDate = today,
+                        ErrorMessage = error,
+                        Payload = JsonSerializer.Serialize(new
+                        {
+                            Manual = true,
+                            Count = items.Count,
+                            WindowStart = windowStart,
+                            WindowEnd = today
+                        })
+                    });
+                }
+
+                if (success)
+                {
+                    sentCount++;
+                }
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            return sentCount;
         }
 
         private static bool ShouldTrigger(AlertRule rule, double temp, DateTime now)
