@@ -397,11 +397,6 @@ namespace server.Services
 
         private Task ThrottleAsync(CancellationToken cancellationToken)
         {
-            if (EmailThrottleMilliseconds <= 0)
-            {
-                return Task.CompletedTask;
-            }
-
             int delayMs = 0;
             lock (_sendLock)
             {
