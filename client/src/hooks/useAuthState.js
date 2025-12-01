@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { getApiUrl, getAuthToken } from "../services/apiClient";
+
+const API_URL = getApiUrl();
 
 const useAuthState = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -6,19 +9,77 @@ const useAuthState = () => {
   const [user, setUser] = useState(null);
   const [showLoginRegister, setShowLoginRegister] = useState(false);
 
-  useEffect(() => {
-    const storedAuth = localStorage.getItem("isAuthenticated") === "true";
-    const storedGuest = localStorage.getItem("isGuest") === "true";
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+  const verifyToken = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return false;
 
-    setIsAuthenticated(storedAuth);
-    setIsGuest(storedGuest);
-    setUser(storedUser);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!storedAuth && !storedGuest) {
-      setShowLoginRegister(true);
+      if (!response.ok) {
+        throw new Error("Invalid token");
+      }
+
+      const data = await response.json();
+      setIsAuthenticated(true);
+      setIsGuest(false);
+      setUser({ username: data.username, email: data.email });
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("user", JSON.stringify({ username: data.username, email: data.email }));
+      setShowLoginRegister(false);
+      return true;
+    } catch {
+      // Keep token and cached user to avoid aggressive logouts on transient failures
+      const cachedUser = localStorage.getItem("user");
+      if (cachedUser) {
+        const parsed = JSON.parse(cachedUser);
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        setUser(parsed);
+        setShowLoginRegister(false);
+      } else {
+        setIsAuthenticated(false);
+        setIsGuest(false);
+        setUser(null);
+        setShowLoginRegister(true);
+      }
+      return false;
     }
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      // Optimistically restore cached auth state before verifying
+      const cachedUser = localStorage.getItem("user");
+      const cachedAuth = localStorage.getItem("isAuthenticated") === "true";
+      const token = getAuthToken();
+      if (cachedAuth && cachedUser && token) {
+        try {
+          setUser(JSON.parse(cachedUser));
+          setIsAuthenticated(true);
+          setIsGuest(false);
+        } catch {
+          // ignore parse errors
+        }
+      }
+
+      const verified = await verifyToken();
+      if (verified) return;
+
+      const storedGuest = localStorage.getItem("isGuest") === "true";
+      if (storedGuest) {
+        setIsGuest(true);
+        setIsAuthenticated(false);
+        setShowLoginRegister(false);
+        return;
+      }
+      setShowLoginRegister(true);
+    })();
+  }, [verifyToken]);
 
   const handleLoginSuccess = (token, username, email) => {
     setIsAuthenticated(true);

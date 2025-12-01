@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using server.Models;
 using server.Services;
+using System.Security.Claims;
 
 namespace server.Controllers
 {
@@ -53,6 +55,30 @@ namespace server.Controllers
                 Console.Error.WriteLine($"Login error: {ex.Message}");
                 return StatusCode(500, new { error = "Login failed" });
             }
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { error = "Missing current or new password" });
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { error = "Invalid token" });
+            }
+
+            var success = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword, cancellationToken);
+            if (!success)
+            {
+                return BadRequest(new { error = "Current password is incorrect" });
+            }
+
+            return NoContent();
         }
     }
 }

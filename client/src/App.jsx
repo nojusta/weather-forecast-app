@@ -8,6 +8,7 @@ import UserMenu from "./components/UserMenu";
 import HistoryModal from "./components/HistoryModal";
 import StatsModal from "./components/StatsModal";
 import AlertsModal from "./components/AlertsModal";
+import AccountModal from "./components/AccountModal";
 import useWeather from "./hooks/useWeather";
 import useAuthState from "./hooks/useAuthState";
 import useUserInsights from "./hooks/useUserInsights";
@@ -18,6 +19,7 @@ function App() {
     isAuthenticated,
     isGuest,
     showLoginRegister,
+    user,
     handleLoginSuccess,
     handleGuestAccess,
     handleLogout,
@@ -58,11 +60,12 @@ function App() {
     runDigestNow,
   } = useAlerts(isAuthenticated);
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
 
   return (
     <Layout>
       {!showLoginRegister && (
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <UserMenu
             isAuthenticated={isAuthenticated}
             isGuest={isGuest}
@@ -74,6 +77,7 @@ function App() {
             onOpenHistory={openHistory}
             onOpenStats={openStats}
             onOpenAlerts={() => setAlertsModalOpen(true)}
+            onOpenAccount={() => setAccountModalOpen(true)}
           />
         </div>
       )}
@@ -156,6 +160,11 @@ function App() {
         onRefresh={reloadAlerts}
         onRunDigest={runDigestNow}
         selectedCity={selectedCity}
+      />
+      <AccountModal
+        isOpen={accountModalOpen}
+        onClose={() => setAccountModalOpen(false)}
+        user={user}
       />
     </Layout>
   );

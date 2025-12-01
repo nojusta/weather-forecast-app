@@ -119,5 +119,23 @@ namespace server.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
+
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            if (user == null)
+            {
+                return false;
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            {
+                return false;
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
     }
 }

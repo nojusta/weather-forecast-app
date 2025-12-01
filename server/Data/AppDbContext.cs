@@ -66,6 +66,7 @@ namespace server.Data
                 entity.Property(e => e.DigestEnabled).IsRequired();
                 entity.Property(e => e.QuietHoursStart);
                 entity.Property(e => e.QuietHoursEnd);
+                entity.Property(e => e.DigestSendHourLocal);
                 entity.HasIndex(e => new { e.UserId, e.PlaceCode, e.ConditionType, e.ThresholdC, e.Active });
             });
 

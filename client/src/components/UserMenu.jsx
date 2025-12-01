@@ -11,6 +11,7 @@ const UserMenu = ({
   onOpenHistory,
   onOpenStats,
   onOpenAlerts,
+  onOpenAccount,
 }) => {
   if (!isAuthenticated && !isGuest) {
     return null;
@@ -38,6 +39,18 @@ const UserMenu = ({
             <div className="py-1">
               {isAuthenticated && (
                 <>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={onOpenAccount}
+                        className={`${
+                          active ? "bg-blue-100 text-blue-600" : "text-gray-700"
+                        } group flex items-center w-full px-4 py-2 text-sm`}
+                      >
+                        Account
+                      </button>
+                    )}
+                  </Menu.Item>
                   <Menu.Item>
                     {({ active }) => (
                       <button
@@ -120,6 +133,7 @@ UserMenu.propTypes = {
   onOpenHistory: PropTypes.func.isRequired,
   onOpenStats: PropTypes.func.isRequired,
   onOpenAlerts: PropTypes.func.isRequired,
+  onOpenAccount: PropTypes.func.isRequired,
 };
 
 export default UserMenu;
