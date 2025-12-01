@@ -8,9 +8,10 @@ A responsive web application for displaying weather forecasts with user action l
 
 - Responsive layout for all device sizes
 - Searchable dropdown to select cities for weather forecasts
-- Browser storage of 3 most viewed cities
-- Backend logging of user actions, including per-user history
-- Analytics dashboard endpoints for hottest/coldest cities and viewing stats
+- Per-user history with server-side logging (no reliance on localStorage for auth’d users)
+- Weather analytics endpoints: hottest/coldest cities, top cities, recent views
+- Alert rules with quiet hours, per-rule digest inclusion, daily digest scheduling, and manual “send digest now”
+- Email notifications for alerts/digests (SMTP-configurable) with throttling to avoid provider rate limits
 - Display of current weather conditions and 5-day forecasts (implementation shown below)
 - JWT-based authentication with optional guest mode for quick previews
 
@@ -30,6 +31,8 @@ _5-day forecast_
 - .NET 9 Web API
 - Entity Framework Core + SQLite for persistence
 - JWT authentication with DotNetEnv-driven configuration
+- Background worker for alert evaluation + digest processing
+- SMTP email delivery for alerts/digests (pluggable via env variables)
 
 ### APIs
 
@@ -66,11 +69,18 @@ dotnet restore
 
 3. Create `.env` files:
 
-- **Server (`server/.env`)** – JWT + database configuration:
+- **Server (`server/.env`)** – JWT + database + optional SMTP configuration:
 
   ```ini
   JWT_SECRET_KEY=<Generate_jwt_token_and_add_here>
   CONNECTION_STRING=Data Source=weather-app.db
+
+  # SMTP (required for alert emails/digests)
+  SMTP_HOST=<smtp_host>
+  SMTP_PORT=587
+  SMTP_USER=<smtp_username>
+  SMTP_PASS=<smtp_password>
+  SMTP_FROM=noreply@weatheralerts.local
   ```
 
 - **Client directory (`client/.env`)** – frontend API target:
@@ -118,7 +128,7 @@ weather-forecast-app/
 │   ├── Data/                    # EF Core DbContext + factories
 │   ├── Migrations/              # Database schema history
 │   ├── Models/                  # Request/response + entity models
-│   ├── Services/                # Auth + CityLog services
+│   ├── Services/                # Auth, CityLog, Alerts (worker, email, throttle, time helpers)
 │   ├── Program.cs               # Entry point / middleware
 │   ├── server.csproj            # Project definition
 │   ├── bin/Debug/net9.0/        # Build output (trimmed)
