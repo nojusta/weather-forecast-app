@@ -15,9 +15,7 @@ namespace server.Services
         private const int MinMinutesBetweenTriggers = 60;
         private const int DefaultDigestSendHourLocal = 7; // 07:00 Europe/Vilnius
         private const int EmailThrottleMilliseconds = 2000; // space out sends to avoid rate limits (Mailtrap friendly)
-
-        private readonly object _sendLock = new();
-        private DateTime _nextSendUtc = DateTime.MinValue;
+        private readonly EmailThrottle _throttle;
 
         public AlertService(
             AppDbContext context,
@@ -31,6 +29,7 @@ namespace server.Services
             _emailSender = emailSender;
             _weatherLookup = weatherLookup;
             _logger = logger;
+            _throttle = new EmailThrottle(EmailThrottleMilliseconds);
         }
 
         public async Task<AlertRule?> CreateAsync(string userId, AlertRuleRequest request, CancellationToken cancellationToken)
@@ -188,7 +187,7 @@ namespace server.Services
                     continue;
                 }
 
-                if (IsInQuietHours(now, rule.QuietHoursStart, rule.QuietHoursEnd))
+                if (AlertTime.IsInQuietHours(now, rule.QuietHoursStart, rule.QuietHoursEnd))
                 {
                     _logger.LogWarning("DEBUG | Rule {Id} deferred due to quiet hours", rule.Id);
                     continue;
@@ -228,7 +227,7 @@ namespace server.Services
                         AlertRuleId = rule.Id,
                         Status = AlertDeliveryStatus.Pending,
                         AttemptedAt = now,
-                        DigestBatchDate = ToVilnius(now).Date,
+                        DigestBatchDate = AlertTime.ToVilnius(now).Date,
                         Payload = immediateDelivery.Payload
                     };
                     _context.AlertDeliveries.Add(digestDelivery);
@@ -244,7 +243,7 @@ namespace server.Services
                 }
 
                 var subject = $"Weather alert for {rule.City}";
-                var body = BuildEmailBody(rule, temp.Value, now);
+                var body = AlertEmailFormatter.BuildEmailBody(rule, temp.Value, now);
 
                 if (!_emailSender.IsConfigured)
                 {
@@ -254,7 +253,7 @@ namespace server.Services
                     continue;
                 }
 
-                await ThrottleAsync(cancellationToken);
+                await _throttle.WaitAsync(cancellationToken);
 
                 var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
                 immediateDelivery.Status = success ? AlertDeliveryStatus.Sent : AlertDeliveryStatus.Failed;
@@ -273,7 +272,7 @@ namespace server.Services
             }
 
             var now = DateTime.UtcNow;
-            var vilniusNow = ToVilnius(now);
+            var vilniusNow = AlertTime.ToVilnius(now);
             var windowStart = vilniusNow.Date.AddDays(-1); // last 24h window
             var today = vilniusNow.Date;
 
@@ -323,11 +322,9 @@ namespace server.Services
                     .ToList();
 
                 var subject = "Dienos orų įspėjimų santrauka";
-                var body = BuildDigestEmail(items, vilniusNow);
+                var body = AlertEmailFormatter.BuildDigestEmail(items, vilniusNow);
 
-                await ThrottleAsync(cancellationToken);
-
-                await ThrottleAsync(cancellationToken);
+                await _throttle.WaitAsync(cancellationToken);
 
                 var (success, error) = await _emailSender.SendAsync(user.Email, subject, body, true, cancellationToken);
 
@@ -388,146 +385,6 @@ namespace server.Services
             return rule.LastTriggeredAt.Value <= now.AddMinutes(-MinMinutesBetweenTriggers);
         }
 
-        private static bool IsInQuietHours(DateTime nowUtc, int? startHour, int? endHour)
-        {
-            if (!startHour.HasValue || !endHour.HasValue)
-            {
-                return false;
-            }
-
-            var local = ToVilnius(nowUtc);
-            var hour = local.Hour;
-
-            if (startHour == endHour)
-            {
-                return false;
-            }
-
-            if (startHour < endHour)
-            {
-                return hour >= startHour && hour < endHour;
-            }
-
-            return hour >= startHour || hour < endHour;
-        }
-
-        private static DateTime ToVilnius(DateTime utcNow)
-        {
-            try
-            {
-                var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-                return TimeZoneInfo.ConvertTimeFromUtc(utcNow, tz);
-            }
-            catch
-            {
-                return utcNow;
-            }
-        }
-
-        private Task ThrottleAsync(CancellationToken cancellationToken)
-        {
-            int delayMs = 0;
-            lock (_sendLock)
-            {
-                var now = DateTime.UtcNow;
-                if (now < _nextSendUtc)
-                {
-                    delayMs = (int)Math.Ceiling((_nextSendUtc - now).TotalMilliseconds);
-                }
-
-                _nextSendUtc = now.AddMilliseconds(EmailThrottleMilliseconds);
-            }
-
-            return delayMs > 0
-                ? Task.Delay(delayMs, cancellationToken)
-                : Task.CompletedTask;
-        }
-
-        private static string BuildEmailBody(AlertRule rule, double temp, DateTime now)
-        {
-            var condition = rule.ConditionType == AlertConditionType.Below ? "žemiau" : "aukščiau";
-            var localNow = ToVilnius(now);
-
-            return $@"
-<html>
-  <body style=""font-family: Arial, sans-serif; background: #f7fafc; padding: 24px;"">
-    <div style=""max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;"">
-      <div style=""background: linear-gradient(120deg, #2563eb, #38bdf8); padding: 18px 24px; color: #fff;"">
-        <h2 style=""margin:0; font-size: 20px;"">Weather Alert</h2>
-        <p style=""margin:6px 0 0 0; font-size: 14px;"">{rule.City}</p>
-      </div>
-      <div style=""padding: 20px 24px; color: #1f2937;"">
-        <p style=""margin-top:0;"">Buvo suaktyvintas orų perspėjimas.</p>
-        <table style=""width:100%; border-collapse: collapse; margin: 12px 0;"">
-          <tr>
-            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Dabartinė temperatūra</td>
-            <td style=""padding:8px; text-align:right; color:#111827;"">{temp:F1}°C</td>
-          </tr>
-          <tr>
-            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Sąlyga</td>
-            <td style=""padding:8px; text-align:right; color:#111827;"">{condition} {rule.ThresholdC:F1}°C</td>
-          </tr>
-          <tr>
-            <td style=""padding:8px; font-weight:600; color:#4b5563;"">Laikas</td>
-            <td style=""padding:8px; text-align:right; color:#111827;"">{localNow:yyyy-MM-dd HH:mm:ss} (Europe/Vilnius)</td>
-          </tr>
-        </table>
-        <p style=""margin:12px 0 0 0; font-size: 14px; color:#4b5563;"">
-          Galite koreguoti arba išjungti taisyklę prisijungę prie savo paskyros.
-        </p>
-      </div>
-      <div style=""background:#f3f4f6; padding:12px 24px; font-size:12px; color:#6b7280;"">
-        Weather Alerts · Automatizuotas pranešimas
-      </div>
-    </div>
-  </body>
-</html>";
-        }
-
-        private static string BuildDigestEmail(IEnumerable<DeliveryPayload> items, DateTime localNow)
-        {
-            var rows = string.Join("\n", items.Select(item => $@"
-              <tr>
-                <td style=""padding:8px; border-bottom:1px solid #e5e7eb;"">{item.City}</td>
-                <td style=""padding:8px; border-bottom:1px solid #e5e7eb;"">{item.ConditionType}</td>
-                <td style=""padding:8px; border-bottom:1px solid #e5e7eb;"">{item.ThresholdC:F1}°C</td>
-                <td style=""padding:8px; border-bottom:1px solid #e5e7eb;"">{item.Temperature:F1}°C</td>
-                <td style=""padding:8px; border-bottom:1px solid #e5e7eb;"">{item.TriggeredAtLocal}</td>
-              </tr>"));
-
-            return $@"
-<html>
-  <body style=""font-family: Arial, sans-serif; background: #f7fafc; padding: 24px;"">
-    <div style=""max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;"">
-      <div style=""background: linear-gradient(120deg, #2563eb, #38bdf8); padding: 18px 24px; color: #fff;"">
-        <h2 style=""margin:0; font-size: 20px;"">Dienos orų įspėjimų santrauka</h2>
-        <p style=""margin:6px 0 0 0; font-size: 14px;"">{localNow:yyyy-MM-dd} (Europe/Vilnius)</p>
-      </div>
-      <div style=""padding: 20px 24px; color: #1f2937;"">
-        <p style=""margin-top:0;"">Šiandien suveikė šios taisyklės:</p>
-        <table style=""width:100%; border-collapse: collapse; font-size: 14px;"">
-          <thead>
-            <tr>
-              <th style=""text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;"">Miestas</th>
-              <th style=""text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;"">Sąlyga</th>
-              <th style=""text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;"">Slenkstis</th>
-              <th style=""text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;"">Temp</th>
-              <th style=""text-align:left; padding:8px; border-bottom:1px solid #e5e7eb;"">Laikas</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows}
-          </tbody>
-        </table>
-      </div>
-      <div style=""background:#f3f4f6; padding:12px 24px; font-size:12px; color:#6b7280;"">
-        Weather Alerts · Automatizuotas pranešimas
-      </div>
-    </div>
-  </body>
-</html>";
-        }
-
         private static void ValidateRequest(AlertRuleRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.City) || string.IsNullOrWhiteSpace(request.PlaceCode))
@@ -546,24 +403,6 @@ namespace server.Services
             }
         }
 
-        private class DeliveryPayload
-        {
-            public string City { get; set; } = string.Empty;
-            public string PlaceCode { get; set; } = string.Empty;
-            public double Temperature { get; set; }
-            public AlertConditionType ConditionType { get; set; }
-            public double ThresholdC { get; set; }
-            public DateTime TriggeredAt { get; set; }
-
-            public string TriggeredAtLocal
-            {
-                get
-                {
-                    var local = ToVilnius(TriggeredAt);
-                    return $"{local:yyyy-MM-dd HH:mm:ss}";
-                }
-            }
-        }
     }
 
     public class AlertStats
