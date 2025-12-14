@@ -58,6 +58,25 @@ namespace server.Controllers
         }
 
         [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me(CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _authService.GetUserByIdAsync(userIdClaim);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new { username = user.Username, email = user.Email });
+        }
+
+        [Authorize]
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
         {

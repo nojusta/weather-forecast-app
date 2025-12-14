@@ -14,7 +14,7 @@ namespace server.Services
         private readonly ILogger<AlertService> _logger;
         private const int MinMinutesBetweenTriggers = 60;
         private const int DefaultDigestSendHourLocal = 7; // 07:00 Europe/Vilnius
-        private const int EmailThrottleMilliseconds = 2000; // space out sends to avoid rate limits (Mailtrap friendly)
+        private const int EmailThrottleMilliseconds = 2000; // ismetyt del rate limits
         private readonly EmailThrottle _throttle;
 
         public AlertService(

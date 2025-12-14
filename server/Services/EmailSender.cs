@@ -10,6 +10,7 @@ namespace server.Services
         private readonly string? _username;
         private readonly string? _password;
         private readonly string? _from;
+        private readonly string? _fromName;
         private readonly bool _enabled;
 
         public EmailSender(IConfiguration configuration)
@@ -19,6 +20,7 @@ namespace server.Services
             _username = Environment.GetEnvironmentVariable("SMTP_USER") ?? configuration["Smtp:User"];
             _password = Environment.GetEnvironmentVariable("SMTP_PASS") ?? configuration["Smtp:Pass"];
             _from = Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["Smtp:From"];
+            _fromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") ?? configuration["Smtp:FromName"];
 
             _enabled = !string.IsNullOrWhiteSpace(_host) && !string.IsNullOrWhiteSpace(_from);
         }
@@ -36,7 +38,9 @@ namespace server.Services
             {
                 using var client = new SmtpClient(_host, _port)
                 {
-                    EnableSsl = false,
+                    EnableSsl = true, // STARTTLS on port 587
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
                     Credentials = (!string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password))
                         ? new NetworkCredential(_username, _password)
                         : CredentialCache.DefaultNetworkCredentials
@@ -44,7 +48,9 @@ namespace server.Services
 
                 using var message = new MailMessage
                 {
-                    From = new MailAddress(_from!),
+                    From = string.IsNullOrWhiteSpace(_fromName)
+                        ? new MailAddress(_from!)
+                        : new MailAddress(_from!, _fromName),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = isHtml
