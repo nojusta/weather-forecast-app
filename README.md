@@ -1,6 +1,19 @@
 # Weather Forecast App
 
-A responsive web application for displaying weather forecasts with user action logging.
+<p align="center">
+  Weather forecasts with alert rules, digest scheduling, and SMTP-powered email notifications.
+</p>
+
+<p align="center">
+  <img alt="React 18" src="https://img.shields.io/badge/React-18-0F172A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-Frontend-4F46E5?style=for-the-badge&logo=vite&logoColor=FFD62E" />
+  <img alt=".NET 9" src="https://img.shields.io/badge/.NET-9%20Web%20API-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-EF%20Core-0F766E?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <img alt="SMTP Alerts" src="https://img.shields.io/badge/Email-Alerts%20%26%20Digests-E11D48?style=for-the-badge&logo=gmail&logoColor=white" />
+</p>
+
+This project combines a React frontend and a .NET backend to deliver weather forecasts, usage analytics, and configurable email alerts and digests for authenticated users.
+
 
 ![Weather Forecast App](client/src/assets/FrontPage.png)
 
